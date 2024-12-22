@@ -175,6 +175,7 @@ def wrap_text(text: str, least_width: int):
 
 
 def create_2ch_video(prompt: str):
+    id = uuid.uuid4()
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -362,4 +363,8 @@ def create_2ch_video(prompt: str):
         clips.append(message_B_clip)
 
     final_clip = CompositeVideoClip(clips)
-    final_clip.write_videofile("./output.mp4", threads=8, fps=3)
+    final_clip.write_videofile(f"/tmp/{id}.mp4", threads=8, fps=3)
+    return f"/tmp/{id}.mp4"
+
+
+create_2ch_video("QOL")

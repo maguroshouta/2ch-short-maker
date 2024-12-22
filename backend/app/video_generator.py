@@ -12,7 +12,7 @@ from moviepy import (
 from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from env import OPENAI_API_KEY
+from app.core.env import OPENAI_API_KEY
 
 openai = OpenAI(
     api_key=OPENAI_API_KEY,

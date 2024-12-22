@@ -13,7 +13,6 @@ def init_minio():
     if minio_client.bucket_exists("videos") or minio_client.bucket_exists("thumbnails"):
         return
     minio_client.make_bucket("videos")
-    minio_client.make_bucket("thumbnails")
 
 
 print("Initializing Minio buckets")

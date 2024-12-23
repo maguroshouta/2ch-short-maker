@@ -1,8 +1,27 @@
-export default function Home() {
-  return (
-    <main className="mt-32 flex flex-col items-center gap-2">
-      <h1 className="font-bold text-4xl">2ch ショートメーカー</h1>
-      <p className="text-xl text-">量産型のショートをAIが生成します</p>
-    </main>
-  );
+import { Button } from "@/components/ui/button";
+import VideoCard from "@/components/video-card";
+
+export default async function Home() {
+	const res = await fetch(
+		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/recent`,
+	);
+	const videos: Video[] = await res.json();
+
+	return (
+		<main className="mt-16 w-full flex flex-col items-center gap-4">
+			<h1 className="text-4xl font-bold">2ch ショートメーカー</h1>
+			<p className="text-xl">AIで量産型のショートを生成します</p>
+			<div className="flex flex-col gap-4 md:flex-row">
+				<Button size="lg">今すぐ生成する</Button>
+				<Button size="lg" variant="outline">
+					最近生成されたものを見る
+				</Button>
+			</div>
+			<div className="flex flex-col mt-8 md:flex-row">
+				{videos.map((video) => (
+					<VideoCard key={video.id} video={video} />
+				))}
+			</div>
+		</main>
+	);
 }

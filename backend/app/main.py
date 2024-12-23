@@ -5,11 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.main import api_router
 from app.core.db import create_db_and_tables
 from app.core.env import FRONTEND_URL
+from app.core.minio_client import create_bucket
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+    create_bucket()
     yield
 
 

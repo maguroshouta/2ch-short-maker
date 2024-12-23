@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlmodel import col, select
 
 from app import video_generator
-from app.api.deps import get_minio
 from app.core.db import GenerateVideo, SessionDep, Video
+from app.core.minio_client import get_minio
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 

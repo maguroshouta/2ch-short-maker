@@ -1,1 +1,4 @@
 .venv
+static/audio
+static/aquestalkplayer/*
+!static/aquestalkplayer/AquesTalkPlayer.preset

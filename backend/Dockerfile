@@ -12,8 +12,8 @@ RUN dpkg --add-architecture i386 && \
 RUN apt update && apt install -y --install-recommends winehq-stable ffmpeg
 
 RUN wget https://www.a-quest.com/archive/package/aquestalkplayer_20241104.zip && \
-  mkdir -p /app/backend/static/aquestalk/ && \
-  unzip aquestalkplayer_20241104.zip -d /app/backend/static/aquestalk/ && \
+  mkdir -p /app/static/aquestalkplayer && \
+  unzip aquestalkplayer_20241104.zip -d /app/static && \
   rm aquestalkplayer_20241104.zip
 
 ENV UV_COMPILE_BYTECODE=1

@@ -1,4 +1,10 @@
 services:
+  app:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
   postgres:
     image: postgres:16
     environment:

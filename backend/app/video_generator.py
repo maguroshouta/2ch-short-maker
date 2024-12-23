@@ -112,7 +112,7 @@ def create_message_box(text: str, border_color: tuple[int, int, int, int]):
 def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
     cmd = [
         "wine",
-        "static/aquestalk/AquesTalkPlayer.exe",
+        "static/aquestalkplayer/AquesTalkPlayer.exe",
         "/nogui",
         "/T",
         text,

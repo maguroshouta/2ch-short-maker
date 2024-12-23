@@ -172,5 +172,5 @@ cython_debug/
 
 # misc
 static/audio
-static/aquestalk/*
-!static/aquestalk/AquesTalkPlayer.preset
+static/aquestalkplayer/*
+!static/aquestalkplayer/AquesTalkPlayer.preset

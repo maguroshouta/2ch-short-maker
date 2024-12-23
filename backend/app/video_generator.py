@@ -113,6 +113,7 @@ def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
     cmd = [
         "wine",
         "static/aquestalk/AquesTalkPlayer.exe",
+        "/nogui",
         "/T",
         text,
         "/P",

@@ -172,6 +172,5 @@ cython_debug/
 
 # misc
 static/audio
-static/fonts
 static/aquestalk/*
 !static/aquestalk/AquesTalkPlayer.preset

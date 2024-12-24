@@ -365,4 +365,5 @@ def create_2ch_video(prompt: str):
 
     final_clip = CompositeVideoClip(clips)
     final_clip.write_videofile(f"/tmp/{id}.mp4", threads=8, fps=3)
+    final_clip.close()
     return id

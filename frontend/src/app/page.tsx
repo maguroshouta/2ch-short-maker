@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import VideoCard from "@/components/video-card";
+import VideoSwiper from "@/components/video-swiper";
 
 export default async function Home() {
 	const res = await fetch(
@@ -18,10 +18,8 @@ export default async function Home() {
 				</Button>
 			</div>
 			<h2 className="text-2xl mt-8 font-bold">最近生成された動画</h2>
-			<div className="flex flex-col gap-8 md:flex-row">
-				{videos.map((video) => (
-					<VideoCard key={video.id} video={video} />
-				))}
+			<div className="w-full">
+				<VideoSwiper videos={videos} />
 			</div>
 		</main>
 	);

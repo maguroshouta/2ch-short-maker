@@ -13,3 +13,6 @@ def create_bucket():
     if minio_client.bucket_exists("videos"):
         return
     minio_client.make_bucket("videos")
+    if minio_client.bucket_exists("thumbnails"):
+        return
+    minio_client.make_bucket("thumbnails")

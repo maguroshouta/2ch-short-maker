@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Annotated
 
@@ -12,7 +13,7 @@ class GenerateVideo(SQLModel):
 
 
 class Video(SQLModel, table=True):
-    id: str | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     prompt: str
     created_at: datetime = Field(default_factory=datetime.now, nullable=False)
 

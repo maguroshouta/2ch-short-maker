@@ -176,7 +176,6 @@ def wrap_text(text: str, least_width: int):
 
 
 def create_2ch_video(prompt: str):
-    id = uuid.uuid4()
     response = openai.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -363,7 +362,14 @@ def create_2ch_video(prompt: str):
         cumulative_duration += voice_clips[message_B_key].duration
         clips.append(message_B_clip)
 
+    id = uuid.uuid4()
+    video_path = f"/tmp/{id}.mp4"
+    thumbnail_path = f"/tmp/thumbnail-{id}.png"
+
     final_clip = CompositeVideoClip(clips)
-    final_clip.write_videofile(f"/tmp/{id}.mp4", threads=8, fps=3)
+    final_clip.write_videofile(video_path, threads=8, fps=3)
+    frame = final_clip.get_frame(0)
+    thumbnail = Image.fromarray(frame)
+    thumbnail.save(thumbnail_path)
     final_clip.close()
-    return id
+    return video_path, thumbnail_path

@@ -14,10 +14,11 @@ export default async function Home() {
 			<div className="flex flex-col gap-4 md:flex-row">
 				<Button size="lg">今すぐ生成する</Button>
 				<Button size="lg" variant="outline">
-					最近生成されたものを見る
+					生成されたものを見る
 				</Button>
 			</div>
-			<div className="flex flex-col mt-8 md:flex-row">
+			<h2 className="text-2xl mt-8 font-bold">最近生成された動画</h2>
+			<div className="flex flex-col gap-8 md:flex-row">
 				{videos.map((video) => (
 					<VideoCard key={video.id} video={video} />
 				))}

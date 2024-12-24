@@ -5,6 +5,8 @@ export default async function Home() {
 	const res = await fetch(`${process.env.API_URL}/api/videos/recent`);
 	const videos: Video[] = await res.json();
 
+	console.log(videos);
+
 	return (
 		<main className="mt-16 w-full flex flex-col items-center gap-4">
 			<h1 className="text-4xl font-bold">2ch ショートメーカー</h1>

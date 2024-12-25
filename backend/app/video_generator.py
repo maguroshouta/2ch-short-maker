@@ -1,7 +1,9 @@
 import json
 import subprocess
 import uuid
+from io import BytesIO
 
+import requests
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
@@ -12,7 +14,7 @@ from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from app.core.env import OPENAI_API_KEY
-from app.utils import wrap_text
+from app.utils import irasutoya_search, wrap_text
 
 openai = OpenAI(
     api_key=OPENAI_API_KEY,
@@ -156,6 +158,25 @@ def create_voice_clip(text: str, voice_preset: str):
     return clip
 
 
+def create_irasutoya_clip(keyword: str):
+    id = uuid.uuid4()
+    output_path = f"/tmp/{id}.png"
+
+    irasutoya_image_url = irasutoya_search(keyword)
+    if irasutoya_image_url is None:
+        return None
+    response = requests.get(irasutoya_image_url)
+    image = Image.open(BytesIO(response.content))
+    image.save(output_path)
+
+    clip = ImageClip(output_path)
+
+    _, image_height = image.size
+
+    related_keyword_clip = clip.with_position(("center", 1920 - image_height))
+    return related_keyword_clip
+
+
 def create_2ch_video(prompt: str):
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -178,6 +199,10 @@ def create_2ch_video(prompt: str):
                             "type": "string",
                             "description": "テーマに沿ったランキングのタイトル",
                         },
+                        "keyword": {
+                            "type": "string",
+                            "description": "タイトルの単語",
+                        },
                         "items": {
                             "type": "array",
                             "description": "ランキングのアイテム",
@@ -187,6 +212,10 @@ def create_2ch_video(prompt: str):
                                     "title": {
                                         "type": "string",
                                         "description": "アイテムの名前(10文字以内)",
+                                    },
+                                    "keyword": {
+                                        "type": "string",
+                                        "description": "アイテムの単語",
                                     },
                                     "ranking": {
                                         "type": "integer",
@@ -201,12 +230,12 @@ def create_2ch_video(prompt: str):
                                         "description": "Bのメッセージ",
                                     },
                                 },
-                                "required": ["title", "ranking", "A", "B"],
+                                "required": ["title", "ranking", "A", "B", "keyword"],
                                 "additionalProperties": False,
                             },
                         },
                     },
-                    "required": ["title", "items"],
+                    "required": ["title", "items", "keyword"],
                     "additionalProperties": False,
                 },
             },
@@ -216,6 +245,7 @@ def create_2ch_video(prompt: str):
     data = json.loads(response.choices[0].message.content)
 
     title = data["title"]
+    keyword = data["keyword"]
     items = data["items"]
 
     title_wrapped = wrap_text(title, 8)
@@ -287,8 +317,14 @@ def create_2ch_video(prompt: str):
     )
     clips.append(ageteke_text_clip)
 
+    irasutoya_clip = create_irasutoya_clip(keyword)
+    if irasutoya_clip is not None:
+        irasutoya_clip = irasutoya_clip.with_duration(voice_clips["title"].duration)
+        clips.append(irasutoya_clip)
+
     for index, item in enumerate(items):
         item_title = item["title"]
+        item_keyword = item["keyword"]
         message_A = item["A"]
         message_B = item["B"]
 
@@ -298,6 +334,15 @@ def create_2ch_video(prompt: str):
         item_title_key = f"item_{index}_title"
         message_A_key = f"item_{index}_A"
         message_B_key = f"item_{index}_B"
+
+        irasutoya_clip = create_irasutoya_clip(item_keyword)
+        if irasutoya_clip is not None:
+            irasutoya_clip = irasutoya_clip.with_start(cumulative_duration).with_duration(
+                voice_clips[item_title_key].duration
+                + voice_clips[message_A_key].duration
+                + voice_clips[message_B_key].duration
+            )
+            clips.append(irasutoya_clip)
 
         item_title_clip = (
             create_title_clip(
@@ -325,7 +370,7 @@ def create_2ch_video(prompt: str):
                 border_color=(255, 0, 0, 255),
             )
             .with_start(cumulative_duration)
-            .with_position((20, 800))
+            .with_position((20, 400))
             .with_duration(voice_clips[message_A_key].duration + voice_clips[message_B_key].duration)
         )
         message_A_clip = message_A_clip.with_audio(voice_clips[message_A_key]).with_start(cumulative_duration)
@@ -338,7 +383,7 @@ def create_2ch_video(prompt: str):
                 border_color=(0, 0, 255, 255),
             )
             .with_start(cumulative_duration)
-            .with_position((20, 1200))
+            .with_position((20, 800))
             .with_duration(voice_clips[message_B_key].duration)
         )
         message_B_clip = message_B_clip.with_audio(voice_clips[message_B_key]).with_start(cumulative_duration)

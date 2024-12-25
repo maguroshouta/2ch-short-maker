@@ -22,8 +22,7 @@ def create_video(session: SessionDep, generate: GenerateVideo):
         minio.fput_object("videos", f"{video.id}.mp4", video_path)
         minio.fput_object("thumbnails", f"{video.id}.jpg", thumbnail_path)
         session.add(video)
-    except Exception as e:
-        print(e)
+    except Exception:
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
     session.commit()
     session.refresh(video)

@@ -2,7 +2,7 @@ FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim
 
 WORKDIR /app
 
-RUN apt update && apt install -y wget gpg unzip
+RUN apt update && apt install -y wget gpg unzip 
 
 RUN dpkg --add-architecture i386 && \
   mkdir -pm755 /etc/apt/keyrings && \
@@ -28,6 +28,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync --frozen --no-dev
+
+RUN uv run python -m unidic download
 
 ENV PATH="/app/.venv/bin:$PATH"
 

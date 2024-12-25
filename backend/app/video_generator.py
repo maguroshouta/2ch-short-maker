@@ -2,7 +2,7 @@ import json
 import subprocess
 import uuid
 
-import budoux
+import MeCab
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
@@ -18,7 +18,7 @@ openai = OpenAI(
     api_key=OPENAI_API_KEY,
 )
 
-parser = budoux.load_default_japanese_parser()
+mecab = MeCab.Tagger("-Owakati")
 
 
 def create_title_text(
@@ -159,20 +159,19 @@ def create_voice_clip(text: str, voice_preset: str):
     return clip
 
 
-def wrap_text(text: str, least_width: int):
-    phrases = parser.parse(text)
+def wrap_text(text: str, width: int):
+    words = mecab.parse(text).strip().split()
 
-    lines = [""]
-    for phrase in phrases:
-        if len(lines) > 0 and len(lines[-1]) >= least_width:
-            lines.append("")
-        lines[-1] += phrase
-
-    if len(lines) >= 2 and len(lines[-1]) <= 2:
-        last_line = lines.pop()
-        lines[-1] += last_line
-
-    return lines
+    wrapped_text = []
+    line = ""
+    for word in words:
+        if len(line) + len(word) > width:
+            wrapped_text.append(line)
+            line = word
+        else:
+            line += word
+    wrapped_text.append(line)
+    return wrapped_text
 
 
 def create_2ch_video(prompt: str):
@@ -237,7 +236,7 @@ def create_2ch_video(prompt: str):
     title = data["title"]
     items = data["items"]
 
-    title_wrapped = parser.parse(title)
+    title_wrapped = wrap_text(title, 8)
 
     clips = []
     cumulative_duration = 0
@@ -309,8 +308,8 @@ def create_2ch_video(prompt: str):
         message_A = item["A"]
         message_B = item["B"]
 
-        wrapped_A = "\n".join(wrap_text(message_A, 5))
-        wrapped_B = "\n".join(wrap_text(message_B, 5))
+        wrapped_A = "\n".join(wrap_text(message_A, 12))
+        wrapped_B = "\n".join(wrap_text(message_B, 12))
 
         item_title_key = f"item_{index}_title"
         message_A_key = f"item_{index}_A"

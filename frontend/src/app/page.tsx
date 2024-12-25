@@ -1,5 +1,5 @@
 import GenerateForm from "@/components/generate-form";
-import VideoSwiper from "@/components/video-swiper";
+import VideoSwiper from "@/components/thumbnail-swiper";
 
 export default async function Home() {
 	const res = await fetch(

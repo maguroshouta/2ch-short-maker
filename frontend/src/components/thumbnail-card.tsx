@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function VideoCard({ video }: { video: Video }) {
+export default function ThumbnailCard({ video }: { video: Video }) {
 	return (
 		<Link href={`/generated/${video.id}`}>
 			<div className="m-4 relative transition hover:scale-105 cursor-pointer">

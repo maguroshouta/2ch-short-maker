@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
@@ -22,6 +23,7 @@ export default function RootLayout({
 			<body className={`${notoSansJP.className} antialiased`}>
 				<Header />
 				{children}
+				<Toaster />
 			</body>
 		</html>
 	);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
 	prompt: z
@@ -22,7 +25,10 @@ const formSchema = z.object({
 });
 
 export default function GeneratePage() {
+	const { toast } = useToast();
 	const router = useRouter();
+
+	const [loading, setLoading] = useState(false);
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -32,18 +38,39 @@ export default function GeneratePage() {
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generate`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
+		setLoading(true);
+		try {
+			const res = await fetch(
+				`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generate`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(values),
 				},
-				body: JSON.stringify(values),
-			},
-		);
-		const json: Video = await res.json();
-		router.push(`/generated/${json.id}`);
+			);
+
+			if (!res.ok) {
+				toast({
+					variant: "destructive",
+					title: "エラーが発生しました。",
+					description: "もう一度お試しください。",
+				});
+				setLoading(false);
+				return;
+			}
+
+			const json: Video = await res.json();
+
+			router.push(`/generated/${json.id}`);
+		} catch (err) {
+			toast({
+				variant: "destructive",
+				title: "不明なエラーが発生しました。",
+				description: "もう一度お試しください。",
+			});
+		}
 	}
 
 	return (
@@ -61,7 +88,16 @@ export default function GeneratePage() {
 						</FormItem>
 					)}
 				/>
-				<Button type="submit">生成する</Button>
+				<Button disabled={loading} type="submit">
+					{loading ? (
+						<>
+							<Loader2 className="animate-spin" />
+							生成中...
+						</>
+					) : (
+						<>生成する</>
+					)}
+				</Button>
 			</form>
 		</Form>
 	);

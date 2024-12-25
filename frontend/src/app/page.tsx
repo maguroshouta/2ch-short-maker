@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import VideoSwiper from "@/components/video-swiper";
 
 export default async function Home() {
-	const res = await fetch(`${process.env.API_URL}/api/videos/recent`, {
-		cache: "no-store",
-	});
+	const res = await fetch(
+		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/recent`,
+		{
+			cache: "no-store",
+		},
+	);
 	const videos: Video[] = await res.json();
 
 	return (

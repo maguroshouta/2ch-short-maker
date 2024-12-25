@@ -1,13 +1,14 @@
 import uuid
 
 import requests
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 from sqlmodel import col, select
 
 from app import video_generator
 from app.core.db import GenerateVideo, SessionDep, Video
 from app.core.minio_client import get_minio
+from app.ratelimit import limiter
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
@@ -15,7 +16,8 @@ minio = get_minio()
 
 
 @router.post("/generate")
-def create_video(session: SessionDep, generate: GenerateVideo):
+@limiter.limit("1/5second")
+def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
     try:
         video_path, thumbnail_path = video_generator.create_2ch_video(generate.prompt)
         video = Video(prompt=generate.prompt)

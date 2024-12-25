@@ -2,7 +2,6 @@ import json
 import subprocess
 import uuid
 
-import MeCab
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
@@ -13,12 +12,11 @@ from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from app.core.env import OPENAI_API_KEY
+from app.utils import wrap_text
 
 openai = OpenAI(
     api_key=OPENAI_API_KEY,
 )
-
-mecab = MeCab.Tagger("-Owakati")
 
 
 def create_title_text(
@@ -156,21 +154,6 @@ def create_voice_clip(text: str, voice_preset: str):
     generate_aquestalk_voice(text, voice_preset, output_path)
     clip = AudioFileClip(output_path)
     return clip
-
-
-def wrap_text(text: str, width: int):
-    words = mecab.parse(text).strip().split()
-
-    wrapped_text = []
-    line = ""
-    for word in words:
-        if len(line) + len(word) > width:
-            wrapped_text.append(line)
-            line = word
-        else:
-            line += word
-    wrapped_text.append(line)
-    return wrapped_text
 
 
 def create_2ch_video(prompt: str):

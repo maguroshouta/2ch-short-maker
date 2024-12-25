@@ -276,6 +276,8 @@ def create_2ch_video(prompt: str):
 
     clips.append(main_clip)
 
+    total_height = len(title_wrapped) * 240
+
     for index, text in enumerate(title_wrapped):
         title_text_clip = (
             create_title_clip(
@@ -289,19 +291,19 @@ def create_2ch_video(prompt: str):
             .with_duration(voice_clips["title"].duration)
         )
         clips.append(title_text_clip)
-        if index == len(title_wrapped) - 1:
-            ageteke_text_clip = (
-                create_title_clip(
-                    text="挙げてけｗ",
-                    text_color=(255, 255, 255, 255),
-                    stroke_color=(0, 0, 0, 255),
-                    stroke_width=0,
-                    shadow_stroke_width=32,
-                )
-                .with_position(("center", (index + 1 * 240) + 120))
-                .with_duration(voice_clips["title"].duration)
-            )
-            clips.append(ageteke_text_clip)
+
+    ageteke_text_clip = (
+        create_title_clip(
+            text="挙げてけｗ",
+            text_color=(255, 255, 255, 255),
+            stroke_color=(0, 0, 0, 255),
+            stroke_width=0,
+            shadow_stroke_width=32,
+        )
+        .with_position(("center", total_height + 120))
+        .with_duration(voice_clips["title"].duration)
+    )
+    clips.append(ageteke_text_clip)
 
     for index, item in enumerate(items):
         item_title = item["title"]

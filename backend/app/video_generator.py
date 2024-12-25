@@ -72,11 +72,10 @@ def create_title_text(
     return img
 
 
-def create_message_box(text: str, border_color: tuple[int, int, int, int]):
+def create_message_box(texts: list[str], border_color: tuple[int, int, int, int]):
     font = ImageFont.truetype("static/fonts/keifont.ttf", 80)
-    text_splited = text.split("\n")
 
-    longest_line = max(text_splited, key=len)
+    longest_line = max(texts, key=len)
 
     left, top, right, bottom = font.getbbox(longest_line)
     text_width = right - left
@@ -85,7 +84,7 @@ def create_message_box(text: str, border_color: tuple[int, int, int, int]):
     padding = 60
 
     img_width = text_width + padding
-    img_height = text_height * len(text_splited) + padding
+    img_height = text_height * len(texts) + padding
 
     img_size = (img_width, img_height)
     img = Image.new("RGBA", img_size, (0, 0, 0, 0))
@@ -98,7 +97,7 @@ def create_message_box(text: str, border_color: tuple[int, int, int, int]):
         width=8,
     )
 
-    for i, line in enumerate(text_splited):
+    for i, line in enumerate(texts):
         draw.text(
             (25, 25 + i * 80),
             line,
@@ -140,11 +139,11 @@ def create_title_clip(
 
 
 def create_message_box_clip(
-    text: str,
+    texts: list[str],
     border_color: tuple[int, int, int, int],
 ):
     id = uuid.uuid4()
-    img = create_message_box(text, border_color)
+    img = create_message_box(texts, border_color)
     output_path = f"/tmp/{id}.png"
     img.save(output_path)
     clip = ImageClip(output_path)
@@ -310,8 +309,8 @@ def create_2ch_video(prompt: str):
         message_A = item["A"]
         message_B = item["B"]
 
-        wrapped_A = "\n".join(wrap_text(message_A, 12))
-        wrapped_B = "\n".join(wrap_text(message_B, 12))
+        wrapped_A = wrap_text(message_A, 12)
+        wrapped_B = wrap_text(message_B, 12)
 
         item_title_key = f"item_{index}_title"
         message_A_key = f"item_{index}_A"
@@ -339,7 +338,7 @@ def create_2ch_video(prompt: str):
 
         message_A_clip = (
             create_message_box_clip(
-                text=wrapped_A,
+                texts=wrapped_A,
                 border_color=(255, 0, 0, 255),
             )
             .with_start(cumulative_duration)
@@ -352,7 +351,7 @@ def create_2ch_video(prompt: str):
 
         message_B_clip = (
             create_message_box_clip(
-                text=wrapped_B,
+                texts=wrapped_B,
                 border_color=(0, 0, 255, 255),
             )
             .with_start(cumulative_duration)

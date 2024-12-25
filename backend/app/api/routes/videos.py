@@ -1,4 +1,5 @@
 import uuid
+from logging import getLogger
 
 import requests
 from fastapi import APIRouter, Request, Response
@@ -14,6 +15,8 @@ router = APIRouter(prefix="/videos", tags=["videos"])
 
 minio = get_minio()
 
+logger = getLogger(__name__)
+
 
 @router.post("/generate")
 @limiter.limit("1/5second")
@@ -24,7 +27,8 @@ def create_video(session: SessionDep, request: Request, generate: GenerateVideo)
         minio.fput_object("videos", f"{video.id}.mp4", video_path)
         minio.fput_object("thumbnails", f"{video.id}.jpg", thumbnail_path)
         session.add(video)
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Failed to generate video: {e}")
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
     session.commit()
     session.refresh(video)

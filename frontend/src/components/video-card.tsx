@@ -5,7 +5,7 @@ export default function VideoCard({ video }: { video: Video }) {
 		<Link href={`/generated/${video.id}`}>
 			<div className="m-4 relative transition hover:scale-105 cursor-pointer">
 				<img
-					className="w-64 rounded-xl shadow-md"
+					className="w-48 rounded-xl shadow-md md:w-64"
 					src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}/thumbnail`}
 					alt={video.prompt}
 				/>

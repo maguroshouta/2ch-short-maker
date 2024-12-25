@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import GenerateForm from "@/components/generate-form";
 import VideoSwiper from "@/components/video-swiper";
 
 export default async function Home() {
@@ -12,15 +12,10 @@ export default async function Home() {
 
 	return (
 		<main className="mt-16 w-full flex flex-col items-center gap-4">
-			<h1 className="text-4xl font-bold">2ch ショートメーカー</h1>
-			<p className="text-xl">AIで量産型のショートを生成します</p>
-			<div className="flex flex-col gap-4 md:flex-row">
-				<Button size="lg">今すぐ生成する</Button>
-				<Button size="lg" variant="outline">
-					生成されたものを見る
-				</Button>
-			</div>
-			<h2 className="text-2xl mt-8 font-bold">最近生成された動画</h2>
+			<h1 className="text-3xl font-bold md:text-4xl">2ch ショートメーカー</h1>
+			<p className="mb-2 md:text-xl">AIで量産型のショートを生成します</p>
+			<GenerateForm />
+			<h2 className="text-2xl mt-2 font-bold">最近生成された動画</h2>
 			<div className="w-full">
 				<VideoSwiper videos={videos} />
 			</div>

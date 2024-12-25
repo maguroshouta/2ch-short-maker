@@ -10,9 +10,7 @@ def get_minio():
 
 
 def create_bucket():
-    if minio_client.bucket_exists("videos"):
-        return
-    minio_client.make_bucket("videos")
-    if minio_client.bucket_exists("thumbnails"):
-        return
-    minio_client.make_bucket("thumbnails")
+    if not minio_client.bucket_exists("videos"):
+        minio_client.make_bucket("videos")
+    if not minio_client.bucket_exists("thumbnails"):
+        minio_client.make_bucket("thumbnails")

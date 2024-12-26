@@ -13,6 +13,7 @@ export default async function Page({
 			cache: "no-cache",
 		},
 	);
+
 	const video: Video = await video_res.json();
 
 	const recent_res = await fetch(
@@ -24,6 +25,21 @@ export default async function Page({
 
 	const videos: Video[] = await recent_res.json();
 
+	if (!video_res.ok) {
+		return (
+			<div className="my-8 flex flex-col items-center gap-4">
+				<div className="flex flex-col items-center gap-2">
+					<h1 className="text-4xl font-bold">404 Not Found</h1>
+					<p className="text-2xl">動画が見つかりません</p>
+				</div>
+				<h2 className="mt-4 text-2xl font-bold">最近生成された動画</h2>
+				<div className="w-full">
+					<VideoSwiper videos={videos} />
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="my-8 flex flex-col items-center gap-4">
 			<div className="flex flex-col gap-2">
@@ -34,7 +50,7 @@ export default async function Page({
 					/>
 				</video>
 			</div>
-			<h2 className="my-4 text-2xl font-bold">最近生成された動画</h2>
+			<h2 className="mt-4 text-2xl font-bold">最近生成された動画</h2>
 			<div className="w-full">
 				<VideoSwiper videos={videos} />
 			</div>

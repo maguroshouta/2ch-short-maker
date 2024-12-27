@@ -1,6 +1,7 @@
 import json
 import subprocess
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 
 import numpy
@@ -170,6 +171,23 @@ def create_irasutoya_clip(keyword: str):
     return related_keyword_clip
 
 
+def create_voice_clips(voices: list[dict[str, str]]):
+    with ThreadPoolExecutor() as executor:
+        futures = []
+        for voice in voices:
+            for key, value in voice.items():
+                text = value["text"]
+                voice_preset = value["voice_preset"]
+                future = executor.submit(create_voice_clip, text, voice_preset)
+                futures.append((key, future))
+
+        voice_clips = {}
+        for key, future in futures:
+            voice_clips[key] = future.result()
+
+    return voice_clips
+
+
 def create_2ch_video(prompt: str):
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -246,10 +264,16 @@ def create_2ch_video(prompt: str):
     clips = []
     cumulative_duration = 0
 
-    voice_clips = {}
+    voice_clips_dict = []
 
-    title_voice_clip = create_voice_clip(f"{title}あげてけ", "女性２")
-    voice_clips["title"] = title_voice_clip
+    voice_clips_dict.append(
+        {
+            "title": {
+                "text": f"{title}あげてけ",
+                "voice_preset": "女性２",
+            }
+        }
+    )
 
     for index, item in enumerate(items):
         item_title = item["title"]
@@ -260,9 +284,24 @@ def create_2ch_video(prompt: str):
         message_A_key = f"item_{index}_A"
         message_B_key = f"item_{index}_B"
 
-        voice_clips[item_title_key] = create_voice_clip(item_title, "女性２")
-        voice_clips[message_A_key] = create_voice_clip(message_A, "中性")
-        voice_clips[message_B_key] = create_voice_clip(message_B, "男声２")
+        voice_clips_dict.append(
+            {
+                item_title_key: {
+                    "text": item_title,
+                    "voice_preset": "女性２",
+                },
+                message_A_key: {
+                    "text": message_A,
+                    "voice_preset": "中性",
+                },
+                message_B_key: {
+                    "text": message_B,
+                    "voice_preset": "男声２",
+                },
+            }
+        )
+
+    voice_clips = create_voice_clips(voice_clips_dict)
 
     total_voice_duration = sum([voice_clip.duration for voice_clip in voice_clips.values()])
 

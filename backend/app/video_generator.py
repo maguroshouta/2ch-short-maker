@@ -3,6 +3,7 @@ import subprocess
 import uuid
 from io import BytesIO
 
+import numpy
 import requests
 from moviepy import (
     AudioFileClip,
@@ -130,11 +131,9 @@ def create_title_clip(
     stroke_width: int,
     shadow_stroke_width: int,
 ):
-    id = uuid.uuid4()
     img = create_title_text(text, text_color, stroke_color, stroke_width, shadow_stroke_width)
-    output_path = f"/tmp/{id}.png"
-    img.save(output_path)
-    clip = ImageClip(output_path)
+    img_array = numpy.array(img)
+    clip = ImageClip(img_array)
     return clip
 
 
@@ -142,11 +141,9 @@ def create_message_box_clip(
     texts: list[str],
     border_color: tuple[int, int, int, int],
 ):
-    id = uuid.uuid4()
     img = create_message_box(texts, border_color)
-    output_path = f"/tmp/{id}.png"
-    img.save(output_path)
-    clip = ImageClip(output_path)
+    img_array = numpy.array(img)
+    clip = ImageClip(img_array)
     return clip
 
 
@@ -159,19 +156,15 @@ def create_voice_clip(text: str, voice_preset: str):
 
 
 def create_irasutoya_clip(keyword: str):
-    id = uuid.uuid4()
-    output_path = f"/tmp/{id}.png"
-
     irasutoya_image_url = irasutoya_search(keyword)
     if irasutoya_image_url is None:
         return None
     response = requests.get(irasutoya_image_url)
-    image = Image.open(BytesIO(response.content))
-    image.save(output_path)
+    img = Image.open(BytesIO(response.content))
+    img_array = numpy.array(img)
+    clip = ImageClip(img_array)
 
-    clip = ImageClip(output_path)
-
-    _, image_height = image.size
+    _, image_height = img.size
 
     related_keyword_clip = clip.with_position(("center", 1920 - image_height))
     return related_keyword_clip

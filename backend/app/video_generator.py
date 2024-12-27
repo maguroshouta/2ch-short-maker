@@ -204,12 +204,27 @@ def create_irasutoya_clips(keywords: list[str]):
 
 
 def create_2ch_video(prompt: str):
+    system_prompt = """
+**指示**  
+登場人物は「A」と「B」。以下の形式で回答する。  
+形式：  
+- テーマに沿ったランキング形式（5位まで）を作成  
+- AとBは2chのネットオタク風の喋り口調で発言  
+- 「！」と「？」は禁止、優しい語尾も禁止
+
+**回答例形式**  
+{テーマ}  
+
+{n位}  
+Aが{テーマ}について回答（30文字程度）  
+Bが{テーマ}についてAの回答は無視して回答（25文字程度
+"""
     response = openai.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
-                "content": "以下の形式を必ず守って回答してください。\n登場人物はAとBが存在します。\n2chのネットオタクのような喋り口調で回答してください。\n「！」「？」は使わないでください。\n優しい語尾は使わないでください。\n\n以下回答形式(5位まで作成)\n{テーマに沿った}\n\n{n位}\nAが{テーマ}について回答(30文字程度)\nBが{テーマ}についてAの回答は無視して回答(25文字程度)",
+                "content": system_prompt,
             },
             {"role": "user", "content": prompt},
         ],

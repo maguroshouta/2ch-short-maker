@@ -188,6 +188,21 @@ def create_voice_clips(voices: list[dict[str, str]]):
     return voice_clips
 
 
+def create_irasutoya_clips(keywords: list[str]):
+    with ThreadPoolExecutor() as executor:
+        futures = []
+        for keyword in keywords:
+            future = executor.submit(create_irasutoya_clip, keyword)
+            futures.append(future)
+
+        irasutoya_clips = []
+        for future in futures:
+            irasutoya_clip = future.result()
+            irasutoya_clips.append(irasutoya_clip)
+
+    return irasutoya_clips
+
+
 def create_2ch_video(prompt: str):
     response = openai.chat.completions.create(
         model="gpt-4o",
@@ -264,7 +279,10 @@ def create_2ch_video(prompt: str):
     clips = []
     cumulative_duration = 0
 
+    irasutoya_texts = []
     voice_clips_dict = []
+
+    irasutoya_texts.append(keyword)
 
     voice_clips_dict.append(
         {
@@ -277,12 +295,15 @@ def create_2ch_video(prompt: str):
 
     for index, item in enumerate(items):
         item_title = item["title"]
+        item_keyword = item["keyword"]
         message_A = item["A"]
         message_B = item["B"]
 
         item_title_key = f"item_{index}_title"
         message_A_key = f"item_{index}_A"
         message_B_key = f"item_{index}_B"
+
+        irasutoya_texts.append(item_keyword)
 
         voice_clips_dict.append(
             {
@@ -302,8 +323,9 @@ def create_2ch_video(prompt: str):
         )
 
     voice_clips = create_voice_clips(voice_clips_dict)
+    irasutoya_clips = create_irasutoya_clips(irasutoya_texts)
 
-    total_voice_duration = sum([voice_clip.duration for voice_clip in voice_clips.values()])
+    total_voice_duration = sum([voice.duration for voice in voice_clips.values()])
 
     main_clip = ImageClip("static/images/background.png")
     main_clip = main_clip.with_duration(total_voice_duration)
@@ -349,7 +371,7 @@ def create_2ch_video(prompt: str):
     )
     clips.append(ageteke_text_clip)
 
-    irasutoya_clip = create_irasutoya_clip(keyword)
+    irasutoya_clip = irasutoya_clips[0]
     if irasutoya_clip is not None:
         irasutoya_clip = irasutoya_clip.with_duration(voice_clips["title"].duration)
         clips.append(irasutoya_clip)
@@ -367,7 +389,7 @@ def create_2ch_video(prompt: str):
         message_A_key = f"item_{index}_A"
         message_B_key = f"item_{index}_B"
 
-        irasutoya_clip = create_irasutoya_clip(item_keyword)
+        irasutoya_clip = irasutoya_clips[index + 1]
         if irasutoya_clip is not None:
             irasutoya_clip = irasutoya_clip.with_start(cumulative_duration).with_duration(
                 voice_clips[item_title_key].duration
@@ -427,7 +449,13 @@ def create_2ch_video(prompt: str):
     thumbnail_path = f"/tmp/thumbnail-{id}.png"
 
     final_clip = CompositeVideoClip(clips)
-    final_clip.write_videofile(video_path, threads=8, fps=3)
+    final_clip.write_videofile(
+        video_path,
+        threads=8,
+        fps=3,
+        codec="libx264",
+        audio_codec="aac",
+    )
     frame = final_clip.get_frame(0)
     thumbnail = Image.fromarray(frame)
     thumbnail.save(thumbnail_path)

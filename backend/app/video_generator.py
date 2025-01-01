@@ -1,11 +1,8 @@
+import asyncio
 import json
-import subprocess
 import uuid
-from concurrent.futures import ThreadPoolExecutor
-from io import BytesIO
 
 import numpy
-import requests
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
@@ -16,7 +13,7 @@ from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from app.core.env import OPENAI_API_KEY
-from app.utils import irasutoya_search, wrap_text
+from app.utils import get_irasutoya_img, wrap_text
 
 openai = OpenAI(
     api_key=OPENAI_API_KEY,
@@ -110,7 +107,7 @@ def create_message_box(texts: list[str], border_color: tuple[int, int, int, int]
     return img
 
 
-def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
+async def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
     cmd = [
         "wine",
         "static/aquestalkplayer/AquesTalkPlayer.exe",
@@ -122,7 +119,8 @@ def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
         "/W",
         output_path,
     ]
-    subprocess.run(" ".join(cmd), shell=True)
+    proc = await asyncio.create_subprocess_exec(*cmd)
+    await proc.communicate()
 
 
 def create_title_clip(
@@ -148,75 +146,65 @@ def create_message_box_clip(
     return clip
 
 
-def create_voice_clip(text: str, voice_preset: str):
+async def create_voice_clip(text: str, voice_preset: str):
     id = uuid.uuid4()
     output_path = f"/tmp/{id}.wav"
-    generate_aquestalk_voice(text, voice_preset, output_path)
+    await generate_aquestalk_voice(text, voice_preset, output_path)
     clip = AudioFileClip(output_path)
     return clip
 
 
-def create_irasutoya_clip(keyword: str):
-    irasutoya_image_url = irasutoya_search(keyword)
-    if irasutoya_image_url is None:
+async def create_irasutoya_clip(keyword: str):
+    irasutoya_image = await get_irasutoya_img(keyword)
+    if irasutoya_image is None:
         return None
-    response = requests.get(irasutoya_image_url)
-    img = Image.open(BytesIO(response.content))
-    img_array = numpy.array(img)
+    img_array = numpy.array(irasutoya_image)
     clip = ImageClip(img_array)
 
-    _, image_height = img.size
+    _, image_height = irasutoya_image.size
 
     related_keyword_clip = clip.with_position(("center", 1920 - image_height))
     return related_keyword_clip
 
 
-def create_voice_clips(voices: list[dict[str, str]]):
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for voice in voices:
-            for key, value in voice.items():
-                text = value["text"]
-                voice_preset = value["voice_preset"]
-                future = executor.submit(create_voice_clip, text, voice_preset)
-                futures.append((key, future))
+async def create_voice_clips(voices: dict[str, dict[str, str]]):
+    voice_clips = {}
+    tasks = {}
+    for key, value in voices.items():
+        text = value["text"]
+        voice_preset = value["voice_preset"]
+        tasks[key] = create_voice_clip(text, voice_preset)
 
-        voice_clips = {}
-        for key, future in futures:
-            voice_clips[key] = future.result()
+    results = await asyncio.gather(*tasks.values())
+    for index, key in enumerate(tasks.keys()):
+        voice_clips[key] = results[index]
 
     return voice_clips
 
 
-def create_irasutoya_clips(keywords: list[str]):
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for keyword in keywords:
-            future = executor.submit(create_irasutoya_clip, keyword)
-            futures.append(future)
+async def create_irasutoya_clips(keywords: list[str]):
+    tasks = []
+    for keyword in keywords:
+        tasks.append(create_irasutoya_clip(keyword))
 
-        irasutoya_clips = []
-        for future in futures:
-            irasutoya_clip = future.result()
-            irasutoya_clips.append(irasutoya_clip)
-
-    return irasutoya_clips
+    results = await asyncio.gather(*tasks)
+    return results
 
 
-def create_2ch_video(prompt: str):
+async def create_2ch_video(prompt: str):
     system_prompt = """
-**指示**  
-登場人物は「A」と「B」。以下の形式で回答する。  
-形式：  
-- テーマに沿ったランキング形式（5位まで）を作成  
-- AとBは2chのネットオタク風の喋り口調で発言  
+**指示**
+登場人物は「A」と「B」。以下の形式で回答する。
+形式：
+- テーマに沿ったランキング形式（5位まで）を作成
+- AとBは2chのネットオタク風の喋り口調で発言
 - 「！」と「？」は禁止、優しい語尾も禁止
 
-**回答例形式**  
-{テーマ}  
+**回答例形式**
+{テーマ}
 
-{n位}  
-Aが{テーマ}について回答（30文字程度）  
+{n位}
+Aが{テーマ}について回答（30文字程度）
 Bが{テーマ}についてAの回答は無視して回答（25文字程度
 """
     response = openai.chat.completions.create(
@@ -258,10 +246,6 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
                                         "type": "string",
                                         "description": "アイテムの単語",
                                     },
-                                    "ranking": {
-                                        "type": "integer",
-                                        "description": "ランキングの順位",
-                                    },
                                     "A": {
                                         "type": "string",
                                         "description": "Aのメッセージ",
@@ -271,7 +255,7 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
                                         "description": "Bのメッセージ",
                                     },
                                 },
-                                "required": ["title", "ranking", "A", "B", "keyword"],
+                                "required": ["title", "A", "B", "keyword"],
                                 "additionalProperties": False,
                             },
                         },
@@ -295,18 +279,14 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
     cumulative_duration = 0
 
     irasutoya_texts = []
-    voice_clips_dict = []
+    voice_clips_dict = {}
 
     irasutoya_texts.append(keyword)
 
-    voice_clips_dict.append(
-        {
-            "title": {
-                "text": f"{title}あげてけ",
-                "voice_preset": "女性２",
-            }
-        }
-    )
+    voice_clips_dict["title"] = {
+        "text": f"{title}あげてけ",
+        "voice_preset": "女性２",
+    }
 
     for index, item in enumerate(items):
         item_title = item["title"]
@@ -320,25 +300,22 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
 
         irasutoya_texts.append(item_keyword)
 
-        voice_clips_dict.append(
-            {
-                item_title_key: {
-                    "text": item_title,
-                    "voice_preset": "女性２",
-                },
-                message_A_key: {
-                    "text": message_A,
-                    "voice_preset": "中性",
-                },
-                message_B_key: {
-                    "text": message_B,
-                    "voice_preset": "男声２",
-                },
-            }
-        )
+        voice_clips_dict[item_title_key] = {
+            "text": item_title,
+            "voice_preset": "女性２",
+        }
+        voice_clips_dict[message_A_key] = {
+            "text": message_A,
+            "voice_preset": "中性",
+        }
 
-    voice_clips = create_voice_clips(voice_clips_dict)
-    irasutoya_clips = create_irasutoya_clips(irasutoya_texts)
+        voice_clips_dict[message_B_key] = {
+            "text": message_B,
+            "voice_preset": "男声２",
+        }
+
+    voice_clips = await create_voice_clips(voice_clips_dict)
+    irasutoya_clips = await create_irasutoya_clips(irasutoya_texts)
 
     total_voice_duration = sum([voice.duration for voice in voice_clips.values()])
 

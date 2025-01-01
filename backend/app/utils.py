@@ -1,6 +1,9 @@
+from io import BytesIO
+
+import httpx
 import MeCab
-import requests
 from bs4 import BeautifulSoup
+from PIL import Image
 
 
 def wrap_text(text: str, width: int):
@@ -19,18 +22,24 @@ def wrap_text(text: str, width: int):
     return wrapped_text
 
 
-def irasutoya_search(keyword: str):
+httpx_client = httpx.AsyncClient()
+
+
+async def get_irasutoya_img(keyword: str):
     url = f"https://www.irasutoya.com/search?q={keyword}"
-    response = requests.get(url)
+    response = await httpx_client.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
     boxim_list = soup.find_all("div", {"class": "boxim"})
     if boxim_list is None or len(boxim_list) == 0:
         return None
     url = boxim_list[0].find("a")["href"]
-    response = requests.get(url)
+    response = await httpx_client.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     entry = soup.find("div", {"class": "entry"})
     image_url = entry.find("a")["href"]
 
-    return image_url
+    response = await httpx_client.get(image_url)
+    img = Image.open(BytesIO(response.content))
+
+    return img

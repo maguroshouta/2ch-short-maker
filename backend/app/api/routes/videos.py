@@ -20,9 +20,9 @@ logger = getLogger(__name__)
 
 @router.post("/generate")
 @limiter.limit("1/5second")
-def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
+async def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
     try:
-        video_path, thumbnail_path = video_generator.create_2ch_video(generate.prompt)
+        video_path, thumbnail_path = await video_generator.create_2ch_video(generate.prompt)
         video = Video(prompt=generate.prompt)
         minio.fput_object("videos", f"{video.id}.mp4", video_path)
         minio.fput_object("thumbnails", f"{video.id}.jpg", thumbnail_path)

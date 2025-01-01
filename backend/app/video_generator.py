@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from logging import getLogger
 
 import numpy
 from moviepy import (
@@ -18,6 +19,8 @@ from app.utils import get_irasutoya_img, wrap_text
 openai = OpenAI(
     api_key=OPENAI_API_KEY,
 )
+
+logger = getLogger(__name__)
 
 
 def create_title_text(
@@ -178,6 +181,7 @@ async def create_voice_clips(voices: dict[str, dict[str, str]]):
 
     results = await asyncio.gather(*tasks.values())
     for key, result in zip(tasks.keys(), results):
+        logger.info(f"Voice clip {key} duration: {result}")
         voice_clips[key] = result
         total_voice_duration += result.duration
 

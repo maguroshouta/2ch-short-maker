@@ -34,12 +34,16 @@ async def get_irasutoya_img(keyword: str):
     if boxim_list is None or len(boxim_list) == 0:
         return None
     url = boxim_list[0].find("a")["href"]
+    if url is None:
+        return None
     response = await httpx_client.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     entry = soup.find("div", {"class": "entry"})
     if entry is None:
         return None
     image_url = entry.find("a")["href"]
+    if image_url is None:
+        return None
 
     response = await httpx_client.get(image_url)
     img = Image.open(BytesIO(response.content))

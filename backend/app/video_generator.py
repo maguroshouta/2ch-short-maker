@@ -82,7 +82,7 @@ def create_message_box(texts: list[str], border_color: tuple[int, int, int, int]
 
     padding = 60
 
-    img_width = text_width + padding
+    img_width = text_width + padding + 20
     img_height = text_height * len(texts) + padding
 
     img_size = (img_width, img_height)
@@ -198,7 +198,7 @@ async def create_2ch_video(prompt: str):
 **指示**
 登場人物は「A」と「B」。以下の形式で回答する。
 形式：
-- テーマに沿ったランキング形式（5位まで）を作成
+- テーマに沿ったランキング形式（3位まで）を作成
 - AとBは2chのネットオタク風の喋り口調で発言
 - 「！」と「？」は禁止、優しい語尾も禁止
 
@@ -374,6 +374,7 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
         message_A = item["A"]
         message_B = item["B"]
 
+        wrapped_item_title = wrap_text(item_title, 8)
         wrapped_A = wrap_text(message_A, 12)
         wrapped_B = wrap_text(message_B, 12)
 
@@ -390,22 +391,24 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
             )
             clips.append(irasutoya_clip)
 
-        item_title_clip = (
-            create_title_clip(
-                text=item_title,
-                text_color=(255, 0, 0, 255),
-                stroke_color=(255, 255, 255, 255),
-                stroke_width=16,
-                shadow_stroke_width=48,
+        for index, text in enumerate(wrapped_item_title):
+            item_title_clip = (
+                create_title_clip(
+                    text=text,
+                    text_color=(255, 0, 0, 255),
+                    stroke_color=(255, 255, 255, 255),
+                    stroke_width=16,
+                    shadow_stroke_width=48,
+                )
+                .with_start(cumulative_duration)
+                .with_position(("center", (240 * index) + 120))
+                .with_duration(
+                    voice_clips[item_title_key].duration
+                    + voice_clips[message_A_key].duration
+                    + voice_clips[message_B_key].duration
+                )
             )
-            .with_start(cumulative_duration)
-            .with_position(("center", 120))
-            .with_duration(
-                voice_clips[item_title_key].duration
-                + voice_clips[message_A_key].duration
-                + voice_clips[message_B_key].duration
-            )
-        )
+            clips.append(item_title_clip)
         item_title_clip = item_title_clip.with_audio(voice_clips[item_title_key]).with_start(cumulative_duration)
         cumulative_duration += voice_clips[item_title_key].duration
         clips.append(item_title_clip)
@@ -416,7 +419,7 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
                 border_color=(255, 0, 0, 255),
             )
             .with_start(cumulative_duration)
-            .with_position((20, 400))
+            .with_position((20, 800))
             .with_duration(voice_clips[message_A_key].duration + voice_clips[message_B_key].duration)
         )
         message_A_clip = message_A_clip.with_audio(voice_clips[message_A_key]).with_start(cumulative_duration)
@@ -429,7 +432,7 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
                 border_color=(0, 0, 255, 255),
             )
             .with_start(cumulative_duration)
-            .with_position((20, 800))
+            .with_position((20, 1200))
             .with_duration(voice_clips[message_B_key].duration)
         )
         message_B_clip = message_B_clip.with_audio(voice_clips[message_B_key]).with_start(cumulative_duration)

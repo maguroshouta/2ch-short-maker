@@ -177,9 +177,9 @@ async def create_voice_clips(voices: dict[str, dict[str, str]]):
         tasks[key] = create_voice_clip(text, voice_preset)
 
     results = await asyncio.gather(*tasks.values())
-    for index, key in enumerate(tasks.keys()):
-        voice_clips[key] = results[index]
-        total_voice_duration += voice_clips[key].duration
+    for key, result in zip(tasks.keys(), results):
+        voice_clips[key] = result
+        total_voice_duration += result.duration
 
     return total_voice_duration, voice_clips
 

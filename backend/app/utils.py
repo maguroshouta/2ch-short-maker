@@ -37,6 +37,8 @@ async def get_irasutoya_img(keyword: str):
     response = await httpx_client.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     entry = soup.find("div", {"class": "entry"})
+    if entry is None:
+        return None
     image_url = entry.find("a")["href"]
 
     response = await httpx_client.get(image_url)

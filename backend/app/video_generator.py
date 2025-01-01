@@ -170,6 +170,7 @@ async def create_irasutoya_clip(keyword: str):
 async def create_voice_clips(voices: dict[str, dict[str, str]]):
     voice_clips = {}
     tasks = {}
+    total_voice_duration = 0
     for key, value in voices.items():
         text = value["text"]
         voice_preset = value["voice_preset"]
@@ -178,8 +179,9 @@ async def create_voice_clips(voices: dict[str, dict[str, str]]):
     results = await asyncio.gather(*tasks.values())
     for index, key in enumerate(tasks.keys()):
         voice_clips[key] = results[index]
+        total_voice_duration += voice_clips[key].duration
 
-    return voice_clips
+    return total_voice_duration, voice_clips
 
 
 async def create_irasutoya_clips(keywords: list[str]):
@@ -314,10 +316,8 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
             "voice_preset": "男声２",
         }
 
-    voice_clips = await create_voice_clips(voice_clips_dict)
+    total_voice_duration, voice_clips = await create_voice_clips(voice_clips_dict)
     irasutoya_clips = await create_irasutoya_clips(irasutoya_texts)
-
-    total_voice_duration = sum([voice.duration for voice in voice_clips.values()])
 
     main_clip = ImageClip("static/images/background.png")
     main_clip = main_clip.with_duration(total_voice_duration)

@@ -2,14 +2,14 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from sqlmodel import Field, Session, SQLModel, create_engine
 
 from app.core.env import DATABASE_URL
 
 
 class GenerateVideo(SQLModel):
-    prompt: str
+    prompt: str = Query(min_length=1, max_length=50)
 
 
 class Video(SQLModel, table=True):

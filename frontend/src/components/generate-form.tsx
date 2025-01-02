@@ -55,6 +55,25 @@ export default function GeneratePage() {
 				},
 			);
 
+			if (res.status === 429) {
+				toast({
+					variant: "destructive",
+					title: "リクエストが多すぎます。",
+					description: "しばらく時間をおいてお試しください。",
+				});
+				setLoading(false);
+				return;
+			}
+
+			if (res.status === 422) {
+				toast({
+					variant: "destructive",
+					title: "入力エラーが発生しました。",
+					description: "1文字以上50文字以内で入力してください。",
+				});
+				setLoading(false);
+			}
+
 			if (!res.ok) {
 				toast({
 					variant: "destructive",
@@ -86,7 +105,7 @@ export default function GeneratePage() {
 					render={({ field }) => (
 						<FormItem>
 							<FormControl>
-								<Input placeholder="お寿司" {...field} required />
+								<Input placeholder="お寿司" {...field} />
 							</FormControl>
 							<FormMessage />
 						</FormItem>

@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 @router.post("/generate")
-@limiter.limit("1/5second")
+@limiter.limit("1/second")
 async def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
     try:
         video_path, thumbnail_path = await video_generator.create_2ch_video(generate.prompt)

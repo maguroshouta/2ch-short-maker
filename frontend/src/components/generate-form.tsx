@@ -39,6 +39,10 @@ export default function GeneratePage() {
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		setLoading(true);
+		toast({
+			title: "生成中...",
+			description: "しばらくお待ちください。",
+		});
 		try {
 			const res = await fetch(
 				`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generate`,

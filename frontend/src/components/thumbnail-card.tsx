@@ -9,9 +9,6 @@ export default function ThumbnailCard({ video }: { video: Video }) {
 					src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}/thumbnail`}
 					alt={video.prompt}
 				/>
-				<div className="flex absolute bottom-4 left-4 bg-white p-2 rounded-xl">
-					<p className="overflow-hidden font-bold">{video.prompt}</p>
-				</div>
 			</div>
 		</Link>
 	);

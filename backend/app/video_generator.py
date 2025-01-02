@@ -1,5 +1,6 @@
 import asyncio
 import json
+import subprocess
 import uuid
 from logging import getLogger
 
@@ -110,22 +111,6 @@ def create_message_box(texts: list[str], border_color: tuple[int, int, int, int]
     return img
 
 
-async def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
-    cmd = [
-        "wine",
-        "static/aquestalkplayer/AquesTalkPlayer.exe",
-        "/nogui",
-        "/T",
-        text,
-        "/P",
-        voice_preset,
-        "/W",
-        output_path,
-    ]
-    proc = await asyncio.create_subprocess_exec(*cmd)
-    await proc.communicate()
-
-
 def create_title_clip(
     text: str,
     text_color: tuple[int, int, int, int],
@@ -149,10 +134,25 @@ def create_message_box_clip(
     return clip
 
 
-async def create_voice_clip(text: str, voice_preset: str):
+def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
+    cmd = [
+        "wine",
+        "static/aquestalkplayer/AquesTalkPlayer.exe",
+        "/nogui",
+        "/T",
+        text,
+        "/P",
+        voice_preset,
+        "/W",
+        output_path,
+    ]
+    subprocess.run(" ".join(cmd), shell=True)
+
+
+def create_voice_clip(text: str, voice_preset: str):
     id = uuid.uuid4()
     output_path = f"/tmp/{id}.wav"
-    await generate_aquestalk_voice(text, voice_preset, output_path)
+    generate_aquestalk_voice(text, voice_preset, output_path)
     clip = AudioFileClip(output_path)
     return clip
 
@@ -170,22 +170,14 @@ async def create_irasutoya_clip(keyword: str):
     return related_keyword_clip
 
 
-async def create_voice_clips(voices: dict[str, dict[str, str]]):
-    voice_clips = {}
-    tasks = {}
-    total_voice_duration = 0
+def create_voice_clips(voices: dict[str, dict[str, str]]):
+    clips = {}
     for key, value in voices.items():
         text = value["text"]
         voice_preset = value["voice_preset"]
-        tasks[key] = create_voice_clip(text, voice_preset)
-
-    results = await asyncio.gather(*tasks.values())
-    for key, result in zip(tasks.keys(), results):
-        logger.info(f"Voice clip {key} duration: {result}")
-        voice_clips[key] = result
-        total_voice_duration += result.duration
-
-    return total_voice_duration, voice_clips
+        clip = create_voice_clip(text, voice_preset)
+        clips[key] = clip
+    return clips
 
 
 async def create_irasutoya_clips(keywords: list[str]):
@@ -320,8 +312,10 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
             "voice_preset": "男声２",
         }
 
-    total_voice_duration, voice_clips = await create_voice_clips(voice_clips_dict)
+    voice_clips = create_voice_clips(voice_clips_dict)
     irasutoya_clips = await create_irasutoya_clips(irasutoya_texts)
+
+    total_voice_duration = sum([clip.duration for clip in voice_clips.values()])
 
     main_clip = ImageClip("static/images/background.png")
     main_clip = main_clip.with_duration(total_voice_duration)

@@ -42,7 +42,7 @@ export default async function Page({
 
 	return (
 		<div className="my-8 flex flex-col items-center gap-4">
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col items-center gap-2">
 				<h1 className="text-4xl">テーマ: {video.prompt}</h1>
 				<video className="w-64 rounded-lg md:w-96" controls loop>
 					<source

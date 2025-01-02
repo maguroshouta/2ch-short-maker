@@ -82,7 +82,7 @@ export default function GeneratePage() {
 					render={({ field }) => (
 						<FormItem>
 							<FormControl>
-								<Input placeholder="お寿司" {...field} />
+								<Input placeholder="お寿司" {...field} required />
 							</FormControl>
 							<FormMessage />
 						</FormItem>

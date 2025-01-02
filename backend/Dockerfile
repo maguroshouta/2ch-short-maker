@@ -11,6 +11,8 @@ RUN dpkg --add-architecture i386 && \
 
 RUN apt update && apt install -y --install-recommends winehq-stable ffmpeg
 
+RUN winecfg
+
 RUN wget https://www.a-quest.com/archive/package/aquestalkplayer_20241104.zip && \
   mkdir -p /app/static/aquestalkplayer && \
   unzip aquestalkplayer_20241104.zip -d /app/static && \
@@ -32,7 +34,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN uv run python -m unidic download
 
 ENV PATH="/app/.venv/bin:$PATH"
-
-ENTRYPOINT []
 
 CMD ["fastapi", "run", "app/main.py", "--port", "3000"]

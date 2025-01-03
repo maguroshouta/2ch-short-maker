@@ -21,7 +21,7 @@ export default function ShareButton({ video }: { video: Video }) {
 	return (
 		<>
 			<span
-				onClick={setIsOpen}
+				onClick={() => setIsOpen(true)}
 				className="cursor-pointer border bg-white rounded-full"
 			>
 				<Share2 className="pr-1 py-2" size={48} color="#000" />

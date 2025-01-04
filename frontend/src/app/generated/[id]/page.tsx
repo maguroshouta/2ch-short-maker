@@ -46,18 +46,18 @@ export default async function Page({
 		<div className="my-4 flex flex-col items-center gap-4">
 			<div className="relative flex flex-col">
 				<p>テーマ</p>
-				<h1 className="mb-2 font-bold text-xl">{video.prompt}</h1>
-				<video className="w-64 rounded-lg md:w-96" controls loop>
+				<h1 className="mb-2 font-bold text-lg">{video.prompt}</h1>
+				<video className="w-72 rounded-lg md:w-96" controls loop>
 					<source
 						src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}`}
 					/>
 				</video>
-				<div className="absolute bottom-0 -right-16 flex flex-col gap-4">
+				<div className="flex gap-4 mt-2">
 					<DownloadButton video={video} />
 					<ShareButton video={video} />
 				</div>
 			</div>
-			<h2 className="mt-4 text-2xl font-bold">最近生成された動画</h2>
+			<h2 className="mt-2 text-2xl font-bold">最近生成された動画</h2>
 			<div className="w-full">
 				<VideoSwiper videos={videos} />
 			</div>

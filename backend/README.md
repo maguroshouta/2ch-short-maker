@@ -9,6 +9,7 @@ Python 3.10 + FastAPI
 - [uv](https://docs.astral.sh/uv/)
 - [docker](https://www.docker.com/)
 - [OpenAIのAPIキー](https://openai.com/)
+- static/audio/にいれるbgm.mp3
 
 開発用コマンド
 

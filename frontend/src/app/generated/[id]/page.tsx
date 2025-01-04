@@ -43,14 +43,16 @@ export default async function Page({
 	}
 
 	return (
-		<div className="my-8 flex flex-col items-center gap-4">
-			<div className="relative flex gap-2">
+		<div className="my-4 flex flex-col items-center gap-4">
+			<div className="relative flex flex-col">
+				<p>テーマ</p>
+				<h1 className="mb-2 font-bold text-xl">{video.prompt}</h1>
 				<video className="w-64 rounded-lg md:w-96" controls loop>
 					<source
 						src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}`}
 					/>
 				</video>
-				<div className="absolute bottom-2 -right-16 flex flex-col gap-4">
+				<div className="absolute bottom-0 -right-16 flex flex-col gap-4">
 					<DownloadButton video={video} />
 					<ShareButton video={video} />
 				</div>

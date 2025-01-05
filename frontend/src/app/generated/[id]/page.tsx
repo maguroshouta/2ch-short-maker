@@ -25,7 +25,7 @@ export default async function Page({
 		},
 	);
 
-	const videos: Video[] = await recent_res.json();
+	const videos: Videos = await recent_res.json();
 
 	if (!video_res.ok) {
 		return (

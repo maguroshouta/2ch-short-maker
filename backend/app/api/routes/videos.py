@@ -2,7 +2,7 @@ import uuid
 from logging import getLogger
 
 import requests
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import JSONResponse
 from sqlmodel import desc, select
 
@@ -68,6 +68,9 @@ def get_video_info(session: SessionDep, video_id: uuid.UUID):
 
 
 @router.get("/")
-def get_videos(session: SessionDep, offset=0, limit=20):
-    videos = session.exec(select(Video).offset(offset).limit(limit).order_by(desc(Video.created_at))).all()
-    return videos
+def get_videos(session: SessionDep, offset=Query(default=0), limit=Query(default=20, le=20)):
+    offset = int(offset)
+    limit = int(limit)
+    is_next = session.exec(select(Video).offset(offset + limit).limit(1)).first() is not None
+    generated = session.exec(select(Video).offset(offset).limit(limit).order_by(desc(Video.created_at))).all()
+    return {"is_next": is_next, "generated": generated}

@@ -68,6 +68,6 @@ def get_video_info(session: SessionDep, video_id: uuid.UUID):
 
 
 @router.get("/")
-def get_recent_videos(session: SessionDep, offset=0, limit=20):
+def get_videos(session: SessionDep, offset=0, limit=20):
     videos = session.exec(select(Video).offset(offset).limit(limit)).all()
     return videos

@@ -14,10 +14,7 @@ export default function Explore(props: { videos: Videos }) {
 	async function viewMore() {
 		setLoading(true);
 		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/api/videos?offset=${videos.length}`,
-			{
-				cache: "no-store",
-			},
+			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/?offset=${videos.length}`,
 		);
 		const newVideos: Videos = await res.json();
 		setIsNext(newVideos.is_next);

@@ -10,7 +10,7 @@ export default async function Page({
 	const id = (await params).id;
 
 	const video_res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/info/${id}`,
+		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${id}`,
 		{
 			cache: "no-cache",
 		},
@@ -19,7 +19,7 @@ export default async function Page({
 	const video: Video = await video_res.json();
 
 	const recent_res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/recent`,
+		`${process.env.NEXT_PUBLIC_API_URL}/api/videos`,
 		{
 			cache: "no-cache",
 		},
@@ -49,7 +49,7 @@ export default async function Page({
 				<h1 className="mb-2 font-bold text-lg">{video.prompt}</h1>
 				<video className="w-72 rounded-lg md:w-96" controls loop>
 					<source
-						src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}`}
+						src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.id}.mp4`}
 					/>
 				</video>
 				<div className="flex gap-4 mt-2">

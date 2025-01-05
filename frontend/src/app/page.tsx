@@ -2,12 +2,9 @@ import GenerateForm from "@/components/generate-form";
 import VideoSwiper from "@/components/thumbnail-swiper";
 
 export default async function Home() {
-	const res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/recent`,
-		{
-			cache: "no-store",
-		},
-	);
+	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
+		cache: "no-store",
+	});
 	const videos: Video[] = await res.json();
 
 	return (

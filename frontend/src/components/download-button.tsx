@@ -5,7 +5,7 @@ import { Download } from "lucide-react";
 export default function DownloadButton({ video }: { video: Video }) {
 	async function download() {
 		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}`,
+			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.id}.mp4`,
 		);
 		const blob = await res.blob();
 		const url = window.URL.createObjectURL(blob);

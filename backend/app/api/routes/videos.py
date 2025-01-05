@@ -4,7 +4,7 @@ from logging import getLogger
 import requests
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
-from sqlmodel import col, select
+from sqlmodel import select
 
 from app.core import video_generator
 from app.core.db import GenerateVideo, SessionDep, Video
@@ -35,7 +35,7 @@ async def create_video(session: SessionDep, request: Request, generate: Generate
     return video
 
 
-@router.get("/generated/{video_id}")
+@router.get("/{video_id}.mp4")
 def get_video(session: SessionDep, video_id: uuid.UUID):
     video = session.get(Video, video_id)
     if video is None:
@@ -47,7 +47,7 @@ def get_video(session: SessionDep, video_id: uuid.UUID):
     return Response(file_res.content, media_type="video/mp4")
 
 
-@router.get("/generated/{video_id}/thumbnail")
+@router.get("/{video_id}.jpg")
 def get_thumbnail(session: SessionDep, video_id: uuid.UUID):
     video = session.get(Video, video_id)
     if video is None:
@@ -59,7 +59,7 @@ def get_thumbnail(session: SessionDep, video_id: uuid.UUID):
     return Response(file_res.content, media_type="image/jpeg")
 
 
-@router.get("/info/{video_id}")
+@router.get("/{video_id}")
 def get_video_info(session: SessionDep, video_id: uuid.UUID):
     video = session.get(Video, video_id)
     if video is None:
@@ -67,7 +67,7 @@ def get_video_info(session: SessionDep, video_id: uuid.UUID):
     return video
 
 
-@router.get("/recent")
-def get_recent_videos(session: SessionDep):
-    videos = session.exec(select(Video).order_by(col(Video.created_at).desc()).limit(20)).all()
+@router.get("/")
+def get_recent_videos(session: SessionDep, offset=0, limit=20):
+    videos = session.exec(select(Video).offset(offset).limit(limit)).all()
     return videos

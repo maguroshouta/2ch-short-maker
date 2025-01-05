@@ -45,7 +45,7 @@ export default async function Page({
 	return (
 		<div className="my-4 flex flex-col items-center gap-4">
 			<div className="relative flex flex-col">
-				<p>テーマ</p>
+				<p>プロンプト</p>
 				<h1 className="mb-2 font-bold text-lg">{video.prompt}</h1>
 				<video className="w-72 rounded-lg md:w-96" controls loop>
 					<source

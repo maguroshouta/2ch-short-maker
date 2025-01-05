@@ -4,7 +4,7 @@ from logging import getLogger
 import requests
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
-from sqlmodel import select
+from sqlmodel import desc, select
 
 from app.core import video_generator
 from app.core.db import GenerateVideo, SessionDep, Video
@@ -69,5 +69,5 @@ def get_video_info(session: SessionDep, video_id: uuid.UUID):
 
 @router.get("/")
 def get_videos(session: SessionDep, offset=0, limit=20):
-    videos = session.exec(select(Video).offset(offset).limit(limit)).all()
+    videos = session.exec(select(Video).offset(offset).limit(limit).order_by(desc(Video.created_at)).all())
     return videos

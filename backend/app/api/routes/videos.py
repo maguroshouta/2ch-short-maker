@@ -69,5 +69,5 @@ def get_video_info(session: SessionDep, video_id: uuid.UUID):
 
 @router.get("/")
 def get_videos(session: SessionDep, offset=0, limit=20):
-    videos = session.exec(select(Video).offset(offset).limit(limit).order_by(desc(Video.created_at)).all())
+    videos = session.exec(select(Video).offset(offset).limit(limit).order_by(desc(Video.created_at))).all()
     return videos

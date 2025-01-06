@@ -39,10 +39,7 @@ export default function ShareButton({ video }: { video: Video }) {
 							<Label htmlFor="link" className="sr-only">
 								Link
 							</Label>
-							<Input
-								defaultValue={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generated/${video.id}`}
-								readOnly
-							/>
+							<Input defaultValue={location.href} readOnly />
 						</div>
 					</div>
 					<DialogFooter className="sm:justify-start">

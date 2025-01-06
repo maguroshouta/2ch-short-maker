@@ -10,6 +10,7 @@ from app.core.env import DATABASE_URL
 
 class GenerateVideo(SQLModel):
     prompt: str = Query(min_length=1, max_length=50)
+    token: str
 
 
 class Video(SQLModel, table=True):

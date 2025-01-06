@@ -1,6 +1,7 @@
 import uuid
 from logging import getLogger
 
+import httpx
 import requests
 from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import JSONResponse
@@ -8,6 +9,7 @@ from sqlmodel import desc, select
 
 from app.core import video_generator
 from app.core.db import GenerateVideo, SessionDep, Video
+from app.core.env import TURNSTILE_SITE_SECRET_KEY
 from app.core.minio_client import get_minio
 
 router = APIRouter(prefix="/videos", tags=["videos"])
@@ -16,10 +18,31 @@ minio = get_minio()
 
 logger = getLogger(__name__)
 
+httpx_client = httpx.AsyncClient()
+
+
+def get_ip(request: Request):
+    if "CF-Connecting-IP" in request.headers:
+        return request.headers["CF-Connecting-IP"]
+    return request.client.host
+
+
+async def check_turnstile(ip: str, token: str):
+    res_turnstile = await httpx_client.post(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        json={"secret": TURNSTILE_SITE_SECRET_KEY, "response": token, "remoteip": ip},
+    )
+    if res_turnstile.status_code != 200:
+        return False
+    return True
+
 
 @router.post("/generate")
 async def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
     try:
+        result = await check_turnstile(get_ip(request), generate.token)
+        if not result:
+            return JSONResponse(status_code=403, content={"message": "Turnstile verification failed"})
         video_path, thumbnail_path = await video_generator.create_2ch_video(generate.prompt)
         video = Video(prompt=generate.prompt)
         minio.fput_object("videos", f"{video.id}.mp4", video_path)

@@ -9,7 +9,6 @@ from sqlmodel import desc, select
 from app.core import video_generator
 from app.core.db import GenerateVideo, SessionDep, Video
 from app.core.minio_client import get_minio
-from app.ratelimit import limiter
 
 router = APIRouter(prefix="/videos", tags=["videos"])
 
@@ -19,7 +18,6 @@ logger = getLogger(__name__)
 
 
 @router.post("/generate")
-@limiter.limit("1/second")
 async def create_video(session: SessionDep, request: Request, generate: GenerateVideo):
     try:
         video_path, thumbnail_path = await video_generator.create_2ch_video(generate.prompt)

@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 const formSchema = z.object({
 	prompt: z
 		.string({ message: "入力してください" })
+		.min(1, { message: "入力してください" })
 		.max(50, { message: "50文字以内で入力してください" }),
 });
 
@@ -105,7 +106,7 @@ export default function GeneratePage() {
 					render={({ field }) => (
 						<FormItem>
 							<FormControl>
-								<Input placeholder="お寿司" {...field} />
+								<Input placeholder="お寿司" {...field} required />
 							</FormControl>
 							<FormMessage />
 						</FormItem>

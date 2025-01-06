@@ -2,9 +2,13 @@ import asyncio
 import json
 import subprocess
 import uuid
+from io import BytesIO
 from logging import getLogger
 
+import httpx
+import MeCab
 import numpy
+from bs4 import BeautifulSoup
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
@@ -15,13 +19,57 @@ from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from app.core.env import OPENAI_API_KEY
-from app.utils import get_irasutoya_img, wrap_text
 
 openai = OpenAI(
     api_key=OPENAI_API_KEY,
 )
 
 logger = getLogger(__name__)
+
+httpx_client = httpx.AsyncClient()
+
+mecab = MeCab.Tagger("-Owakati")
+
+
+def wrap_text(text: str, width: int):
+    words = mecab.parse(text).strip().split()
+
+    wrapped_text = []
+    line = ""
+    for word in words:
+        if len(line) + len(word) > width:
+            wrapped_text.append(line)
+            line = word
+        else:
+            line += word
+    wrapped_text.append(line)
+    return wrapped_text
+
+
+async def get_irasutoya_img(keyword: str):
+    url = f"https://www.irasutoya.com/search?q={keyword}"
+    response = await httpx_client.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    boxim_list = soup.find_all("div", {"class": "boxim"})
+    if boxim_list is None or len(boxim_list) == 0:
+        return None
+    url = boxim_list[0].find("a")["href"]
+    if url is None:
+        return None
+    response = await httpx_client.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    entry = soup.find("div", {"class": "entry"})
+    if entry is None:
+        return None
+    image_url = entry.find("a")["href"]
+    if image_url is None:
+        return None
+
+    response = await httpx_client.get(image_url)
+    img = Image.open(BytesIO(response.content))
+
+    return img
 
 
 def create_title_text(

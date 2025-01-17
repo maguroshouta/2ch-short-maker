@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import Script from "next/script";
+import Turnstile from "react-turnstile"
 
 export default function GeneratePage() {
 	const { toast } = useToast();
@@ -81,15 +81,7 @@ export default function GeneratePage() {
 	return (
 		<form onSubmit={handleSubmit} className="flex gap-2">
 			<Input name="prompt" placeholder="お寿司" required />
-			<Script
-				src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-				async
-				defer
-			/>
-			<div
-				className="cf-turnstile hidden"
-				data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-			/>
+			<Turnstile className="hidden" sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string} />
 			<Button disabled={loading} type="submit">
 				{loading ? (
 					<>

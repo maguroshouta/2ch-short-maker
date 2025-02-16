@@ -62,9 +62,10 @@ async def get_irasutoya_img(keyword: str):
     entry = soup.find("div", {"class": "entry"})
     if entry is None:
         return None
-    image_url = entry.find("a")["href"]
-    if image_url is None:
+    image_a_tag = entry.find("a")
+    if image_a_tag is None:
         return None
+    image_url = image_a_tag["href"]
 
     response = await httpx_client.get(image_url)
     img = Image.open(BytesIO(response.content))

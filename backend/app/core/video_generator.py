@@ -256,6 +256,10 @@ async def create_2ch_video(prompt: str):
 {n位}
 Aが{テーマ}について回答（30文字程度）
 Bが{テーマ}についてAの回答は無視して回答（25文字程度
+
+**キーワード**
+- タイトルに沿った画像を検索するためのキーワードを入力してください。
+- 関連するキーワードでもよい。
 """
     response = openai.chat.completions.create(
         model="gpt-4o-mini",

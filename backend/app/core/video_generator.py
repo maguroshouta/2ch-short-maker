@@ -280,7 +280,7 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
                         },
                         "keyword": {
                             "type": "string",
-                            "description": "タイトルの単語",
+                            "description": "「いらすとや」で画像を検索するためのキーワード",
                         },
                         "items": {
                             "type": "array",

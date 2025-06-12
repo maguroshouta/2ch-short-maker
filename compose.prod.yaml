@@ -8,6 +8,8 @@ services:
       - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
     depends_on:
       - backend
+    networks:
+      - ai-short-maker-network
   backend:
     build:
       context: ./backend
@@ -23,6 +25,8 @@ services:
     depends_on:
       - postgres
       - minio
+    networks:
+      - ai-short-maker-network
   postgres:
     container_name: postgres
     image: postgres:16
@@ -41,6 +45,11 @@ services:
     command: server --address ":9000" /data
     volumes:
       - ai-short-maker-minio-data:/data
+    networks:
+      - ai-short-maker-network
+
+networks:
+  ai-short-maker-network:
 
 volumes:
   ai-short-maker-minio-data:

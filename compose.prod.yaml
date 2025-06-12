@@ -24,9 +24,17 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+    volumes:
+      - ai-short-maker-postgres-data:/var/lib/postgresql/data
   minio:
     image: minio/minio
     environment:
       MINIO_ACCESS_KEY: minio_access_key
       MINIO_SECRET_KEY: minio_secret_key
     command: server --address ":9000" /data
+    volumes:
+      - ai-short-maker-minio-data:/data
+
+volumes:
+  ai-short-maker-minio-data:
+  ai-short-maker-postgres-data:

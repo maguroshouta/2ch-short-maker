@@ -6,6 +6,8 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+    depends_on:
+      - backend
   backend:
     build:
       context: ./backend
@@ -18,6 +20,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - FRONTEND_URL=${FRONTEND_URL}
       - TURNSTILE_SITE_SECRET_KEY=${TURNSTILE_SITE_SECRET_KEY}
+    depends_on:
+      - postgres
+      - minio
   postgres:
     container_name: postgres
     image: postgres:16

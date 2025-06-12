@@ -32,6 +32,8 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - ai-short-maker-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
   minio:
     container_name: minio
     image: minio/minio
@@ -41,6 +43,8 @@ services:
     command: server --address ":9000" /data
     volumes:
       - ai-short-maker-minio-data:/data
+    ports:
+      - "9000:9000"
 
 volumes:
   ai-short-maker-minio-data:

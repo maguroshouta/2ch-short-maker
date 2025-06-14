@@ -47,6 +47,7 @@ async def google_search(query: str) -> list[str]:
 
 agent = Agent(
     name="ai-short-maker",
+    model="gpt-4.1-mini",
     instructions="""
     **指示**
     登場人物は「A」と「B」。以下の形式で回答する。
@@ -63,7 +64,7 @@ agent = Agent(
 
     {n位}
     Aが{テーマ}について回答（30文字程度）
-    Bが{テーマ}についてAの回答は無視して回答（25文字程度
+    Bが{テーマ}についてAの回答は無視して回答（25文字程度）
 
     **キーワード**
     - タイトルに沿った画像を検索するためのキーワードを入力してください。

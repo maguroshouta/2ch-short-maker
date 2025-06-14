@@ -68,8 +68,8 @@ export default async function Page({
 
 export async function generateMetadata({
 	params,
-}: { params: { id: string } }): Promise<Metadata> {
-	const id = params.id;
+}: { params: Promise<{ id: string }> }): Promise<Metadata> {
+	const id = (await params).id;
 	const res = await fetch(
 		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${id}`,
 		{ cache: "no-cache" },

@@ -22,7 +22,7 @@ from trafilatura import extract, fetch_url
 
 
 class Item(BaseModel):
-    title: str = Field(..., description="アイテムの名前(10文字以内)")
+    title: str = Field(..., description="アイテムのタイトル(10文字以内)")
     keyword: str = Field(..., description="アイテムの単語")
     A: str = Field(..., description="Aのメッセージ")
     B: str = Field(..., description="Bのメッセージ")
@@ -59,7 +59,7 @@ agent = Agent(
     - 「{n}位」をタイトルや文章に入れないでください。
 
     **回答例形式**
-    {テーマ}
+    {テーマ} (タイトル)
 
     {n位}
     Aが{テーマ}について回答（30文字程度）

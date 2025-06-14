@@ -1,6 +1,7 @@
 import DownloadButton from "@/components/download-button";
 import ShareButton from "@/components/share-button";
 import VideoSwiper from "@/components/thumbnail-swiper";
+import type { Metadata } from "next";
 
 export default async function Page({
 	params,
@@ -63,4 +64,57 @@ export default async function Page({
 			</div>
 		</div>
 	);
+}
+
+export async function generateMetadata({
+	params,
+}: { params: { id: string } }): Promise<Metadata> {
+	const id = params.id;
+	const res = await fetch(
+		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${id}`,
+		{ cache: "no-cache" },
+	);
+	if (!res.ok) {
+		return {
+			title: "動画が見つかりません | 2chショートメーカー",
+			description: "指定された動画は存在しません。",
+		};
+	}
+	const video: Video = await res.json();
+	const baseUrl = "https://2ch-maker.yakimaguro.com";
+	return {
+		title: `2chショートメーカー | ${video.prompt}`,
+		description: video.prompt,
+		openGraph: {
+			title: `2chショートメーカー | ${video.prompt}`,
+			description: video.prompt,
+			url: `${baseUrl}/generated/${video.id}`,
+			siteName: "2ch ショートメーカー",
+			images: [
+				{
+					url: `${baseUrl}/generated/${video.id}.jpg`,
+					width: 1080,
+					height: 1920,
+					alt: "2ch ショートメーカーのOGP画像",
+				},
+			],
+			locale: "ja_JP",
+			type: "video.other",
+		},
+		alternates: {
+			canonical: `${baseUrl}/generated/${video.id}`,
+		},
+		robots: {
+			index: true,
+			follow: true,
+			googleBot: {
+				index: true,
+				follow: true,
+				"max-image-preview": "large",
+				"max-snippet": -1,
+				"max-video-preview": -1,
+			},
+		},
+		keywords: ["2ch", "ショート動画", "AI動画生成", "動画メーカー", "自動生成"],
+	};
 }

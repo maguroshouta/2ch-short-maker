@@ -1,5 +1,4 @@
 import asyncio
-import json
 import subprocess
 import uuid
 from io import BytesIO
@@ -8,20 +7,78 @@ from logging import getLogger
 import httpx
 import MeCab
 import numpy
+from agents import Agent, Runner, function_tool
 from bs4 import BeautifulSoup
+from googlesearch import search
 from moviepy import (
     AudioFileClip,
     CompositeAudioClip,
     CompositeVideoClip,
     ImageClip,
 )
-from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from pydantic import BaseModel, Field
+from trafilatura import extract, fetch_url
 
-from app.core.env import OPENAI_API_KEY
 
-openai = OpenAI(
-    api_key=OPENAI_API_KEY,
+class Item(BaseModel):
+    title: str = Field(..., description="アイテムの名前(10文字以内)")
+    keyword: str = Field(..., description="アイテムの単語")
+    A: str = Field(..., description="Aのメッセージ")
+    B: str = Field(..., description="Bのメッセージ")
+
+
+class RankingResponse(BaseModel):
+    title: str = Field(..., description="テーマに沿ったランキングのタイトル")
+    keyword: str = Field(..., description="「いらすとや」で画像を検索するためのキーワード")
+    items: list[Item] = Field(..., description="ランキングのアイテム")
+
+
+@function_tool
+async def google_search(query: str) -> list[str]:
+    output = []
+    results = search(query, num_results=3, advanced=True)
+    for result in results:
+        html = fetch_url(result.url)
+        md = extract(html, output_format="markdown")
+        output.append(md)
+    return output
+
+
+agent = Agent(
+    name="ai-short-maker",
+    instructions="""
+    **指示**
+    登場人物は「A」と「B」。以下の形式で回答する。
+    形式：
+    - テーマに沿ったランキング形式（3位まで）を作成
+    - ランキングの順番は下から上になるようにする
+    - AとBは2chのネットオタク風の喋り口調で発言
+    - 「！」と「？」は禁止、優しい語尾も禁止
+    - 卑猥な言葉は禁止
+    - 「{n}位」をタイトルや文章に入れないでください。
+
+    **回答例形式**
+    {テーマ}
+
+    {n位}
+    Aが{テーマ}について回答（30文字程度）
+    Bが{テーマ}についてAの回答は無視して回答（25文字程度
+
+    **キーワード**
+    - タイトルに沿った画像を検索するためのキーワードを入力してください。
+    - 関連するキーワードでもよい。
+
+    **ツール**
+    - 検索結果は5件までです。
+    - google_search(query: str) -> list[str] を使用してください。
+    - 検索結果はmarkdown形式で返されます。
+
+    **検索**
+    - 必ず1回は検索を行ってください。検索結果を参考にして回答してください。
+    """,
+    output_type=RankingResponse,
+    tools=[google_search],
 )
 
 logger = getLogger(__name__)
@@ -239,93 +296,13 @@ async def create_irasutoya_clips(keywords: list[str]):
 
 
 async def create_2ch_video(prompt: str):
-    system_prompt = """
-**指示**
-登場人物は「A」と「B」。以下の形式で回答する。
-形式：
-- テーマに沿ったランキング形式（3位まで）を作成
-- ランキングの順番は下から上になるようにする
-- AとBは2chのネットオタク風の喋り口調で発言
-- 「！」と「？」は禁止、優しい語尾も禁止
-- 卑猥な言葉は禁止
-- 「{n}位」をタイトルや文章に入れないでください。
+    response = await Runner.run(agent, prompt)
 
-**回答例形式**
-{テーマ}
+    data = response.final_output_as(RankingResponse)
 
-{n位}
-Aが{テーマ}について回答（30文字程度）
-Bが{テーマ}についてAの回答は無視して回答（25文字程度
-
-**キーワード**
-- タイトルに沿った画像を検索するためのキーワードを入力してください。
-- 関連するキーワードでもよい。
-"""
-    response = openai.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "2ch_ranking",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "テーマに沿ったランキングのタイトル",
-                        },
-                        "keyword": {
-                            "type": "string",
-                            "description": "「いらすとや」で画像を検索するためのキーワード",
-                        },
-                        "items": {
-                            "type": "array",
-                            "description": "ランキングのアイテム",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "title": {
-                                        "type": "string",
-                                        "description": "アイテムの名前(10文字以内)",
-                                    },
-                                    "keyword": {
-                                        "type": "string",
-                                        "description": "アイテムの単語",
-                                    },
-                                    "A": {
-                                        "type": "string",
-                                        "description": "Aのメッセージ",
-                                    },
-                                    "B": {
-                                        "type": "string",
-                                        "description": "Bのメッセージ",
-                                    },
-                                },
-                                "required": ["title", "A", "B", "keyword"],
-                                "additionalProperties": False,
-                            },
-                        },
-                    },
-                    "required": ["title", "items", "keyword"],
-                    "additionalProperties": False,
-                },
-            },
-        },
-    )
-
-    data = json.loads(response.choices[0].message.content)
-
-    title = data["title"]
-    keyword = data["keyword"]
-    items = data["items"]
+    title = data.title
+    keyword = data.keyword
+    items = data.items
 
     title_wrapped = wrap_text(title, 8)
 
@@ -343,10 +320,10 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
     }
 
     for index, item in enumerate(items):
-        item_title = item["title"]
-        item_keyword = item["keyword"]
-        message_A = item["A"]
-        message_B = item["B"]
+        item_title = item.title
+        item_keyword = item.keyword
+        message_A = item.A
+        message_B = item.B
 
         item_title_key = f"item_{index}_title"
         message_A_key = f"item_{index}_A"
@@ -423,10 +400,10 @@ Bが{テーマ}についてAの回答は無視して回答（25文字程度
         clips.append(irasutoya_clip)
 
     for index, item in enumerate(items):
-        item_title = item["title"]
-        item_keyword = item["keyword"]
-        message_A = item["A"]
-        message_B = item["B"]
+        item_title = item.title
+        item_keyword = item.keyword
+        message_A = item.A
+        message_B = item.B
 
         wrapped_item_title = wrap_text(item_title, 8)
         wrapped_A = wrap_text(message_A, 12)

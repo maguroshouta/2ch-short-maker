@@ -70,7 +70,7 @@ agent = Agent(
     - 関連するキーワードでもよい。
 
     **ツール**
-    - 検索結果は5件までです。
+    - 検索結果は3件までです。
     - google_search(query: str) -> list[str] を使用してください。
     - 検索結果はmarkdown形式で返されます。
 

@@ -22,7 +22,7 @@ from trafilatura import extract, fetch_url
 
 
 class Item(BaseModel):
-    title: str = Field(..., description="アイテムのタイトル(10文字以内)")
+    title: str = Field(..., description="アイテムの名前(10文字以内)")
     keyword: str = Field(..., description="アイテムの単語")
     A: str = Field(..., description="Aのメッセージ")
     B: str = Field(..., description="Bのメッセージ")
@@ -64,7 +64,7 @@ agent = Agent(
 
     {n位}
     Aが{テーマ}について回答（30文字程度）
-    Bが{テーマ}についてAの回答は無視して回答（25文字程度
+    Bが{テーマ}についてAの回答は無視して回答（25文字程度）
 
     **キーワード**
     - タイトルに沿った画像を検索するためのキーワードを入力してください。

@@ -10,6 +10,8 @@ services:
       - MINIO_SECRET_KEY=minio_secret_key
       - MINIO_API_URL=minio:9000
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - TURNSTILE_SITE_SECRET_KEY=${TURNSTILE_SITE_SECRET_KEY}
     depends_on:
       - postgres
       - minio

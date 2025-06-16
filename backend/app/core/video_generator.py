@@ -76,7 +76,7 @@ agent = Agent(
     - 検索結果はmarkdown形式で返されます。
 
     **検索**
-    - わからない場合は検索を行ってください。検索結果を参考にして回答してください。
+    - 必ず1回は検索を行ってください。検索結果を参考にして回答してください。
     """,
     output_type=RankingResponse,
     tools=[google_search],

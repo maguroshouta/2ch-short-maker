@@ -1,6 +1,9 @@
 import asyncio
+import os
 import subprocess
+import tempfile
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from logging import getLogger
 
@@ -34,6 +37,27 @@ class RankingResponse(BaseModel):
     items: list[Item] = Field(..., description="ランキングのアイテム")
 
 
+_FONT_CACHE = {}
+_TEMP_FILES = []
+
+
+def get_cached_font(size: int):
+    if size not in _FONT_CACHE:
+        _FONT_CACHE[size] = ImageFont.truetype("static/fonts/keifont.ttf", size)
+    return _FONT_CACHE[size]
+
+
+def cleanup_temp_files():
+    global _TEMP_FILES
+    for file_path in _TEMP_FILES:
+        try:
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            logger.warning(f"Failed to delete temp file {file_path}: {e}")
+    _TEMP_FILES.clear()
+
+
 @function_tool
 async def google_search(query: str) -> list[str]:
     output = []
@@ -58,6 +82,8 @@ agent = Agent(
     - 「！」と「？」は禁止、優しい語尾も禁止
     - 卑猥な言葉は禁止
     - 「{n}位」をタイトルや文章に入れないでください。
+    - ランキングという言葉は入れないでください。
+    - 「挙げてけｗ」という言葉は入れないでください。
 
     **回答例形式**
     {テーマ} (短文)
@@ -87,6 +113,8 @@ logger = getLogger(__name__)
 httpx_client = httpx.AsyncClient()
 
 mecab = MeCab.Tagger("-Owakati")
+
+executor = ThreadPoolExecutor(max_workers=4)
 
 
 def wrap_text(text: str, width: int):
@@ -138,7 +166,7 @@ def create_title_text(
     stroke_width: int,
     shadow_stroke_width: int,
 ):
-    font = ImageFont.truetype("static/fonts/keifont.ttf", 130)
+    font = get_cached_font(130)
     left, top, right, bottom = font.getbbox(text)
     text_width = right - left
     text_height = bottom - top
@@ -183,7 +211,7 @@ def create_title_text(
 
 
 def create_message_box(texts: list[str], border_color: tuple[int, int, int, int]):
-    font = ImageFont.truetype("static/fonts/keifont.ttf", 80)
+    font = get_cached_font(80)
 
     longest_line = max(texts, key=len)
 
@@ -241,6 +269,36 @@ def create_message_box_clip(
     return clip
 
 
+def generate_aquestalk_voice_sync(text: str, voice_preset: str, output_path: str):
+    cmd = [
+        "wine",
+        "static/aquestalkplayer/AquesTalkPlayer.exe",
+        "/nogui",
+        "/T",
+        text,
+        "/P",
+        voice_preset,
+        "/W",
+        output_path,
+    ]
+    subprocess.run(" ".join(cmd), shell=True)
+
+
+async def create_voice_clip_async(text: str, voice_preset: str):
+    loop = asyncio.get_event_loop()
+
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+        output_path = tmp_file.name
+
+    _TEMP_FILES.append(output_path)
+
+    await loop.run_in_executor(executor, generate_aquestalk_voice_sync, text, voice_preset, output_path)
+
+    clip = AudioFileClip(output_path)
+
+    return clip
+
+
 def generate_aquestalk_voice(text: str, voice_preset: str, output_path: str):
     cmd = [
         "wine",
@@ -275,6 +333,21 @@ async def create_irasutoya_clip(keyword: str):
 
     related_keyword_clip = clip.with_position(("center", 1920 - image_height))
     return related_keyword_clip
+
+
+async def create_voice_clips_async(voices: dict[str, dict[str, str]]):
+    tasks = []
+    keys = []
+
+    for key, value in voices.items():
+        text = value["text"]
+        voice_preset = value["voice_preset"]
+        tasks.append(create_voice_clip_async(text, voice_preset))
+        keys.append(key)
+
+    clips = await asyncio.gather(*tasks)
+
+    return dict(zip(keys, clips))
 
 
 def create_voice_clips(voices: dict[str, dict[str, str]]):
@@ -346,8 +419,10 @@ async def create_2ch_video(prompt: str):
             "voice_preset": "男声２",
         }
 
-    voice_clips = create_voice_clips(voice_clips_dict)
-    irasutoya_clips = await create_irasutoya_clips(irasutoya_texts)
+    voice_clips_task = create_voice_clips_async(voice_clips_dict)
+    irasutoya_clips_task = create_irasutoya_clips(irasutoya_texts)
+
+    voice_clips, irasutoya_clips = await asyncio.gather(voice_clips_task, irasutoya_clips_task)
 
     total_voice_duration = sum([clip.duration for clip in voice_clips.values()])
 
@@ -482,9 +557,24 @@ async def create_2ch_video(prompt: str):
         fps=3,
         codec="libx264",
         audio_codec="aac",
+        temp_audiofile=f"/tmp/temp_audio_{id}.m4a",
     )
     frame = final_clip.get_frame(0)
     thumbnail = Image.fromarray(frame)
     thumbnail.save(thumbnail_path)
     final_clip.close()
+
+    for clip in voice_clips.values():
+        if hasattr(clip, "close"):
+            clip.close()
+
+    if hasattr(bgm, "close"):
+        bgm.close()
+
+    temp_audio_path = f"/tmp/temp_audio_{id}.m4a"
+    if os.path.exists(temp_audio_path):
+        os.unlink(temp_audio_path)
+
+    cleanup_temp_files()
+
     return video_path, thumbnail_path

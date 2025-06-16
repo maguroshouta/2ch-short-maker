@@ -46,8 +46,8 @@ async def google_search(query: str) -> list[str]:
 
 
 agent = Agent(
-    name="ai-short-maker",
-    model="gpt-4o-mini",
+    name="2ch-short-maker",
+    model="gpt-4.1-mini",
     instructions="""
     **指示**
     登場人物は「A」と「B」。以下の形式で回答する。
@@ -76,7 +76,7 @@ agent = Agent(
     - 検索結果はmarkdown形式で返されます。
 
     **検索**
-    - 必ず1回は検索を行ってください。検索結果を参考にして回答してください。
+    - わからない場合は検索を行ってください。検索結果を参考にして回答してください。
     """,
     output_type=RankingResponse,
     tools=[google_search],

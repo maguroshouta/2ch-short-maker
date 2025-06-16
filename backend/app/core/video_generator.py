@@ -47,7 +47,7 @@ async def google_search(query: str) -> list[str]:
 
 agent = Agent(
     name="ai-short-maker",
-    model="gpt-4.1-mini",
+    model="gpt-4o-mini",
     instructions="""
     **指示**
     登場人物は「A」と「B」。以下の形式で回答する。

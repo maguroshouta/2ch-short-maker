@@ -7,7 +7,7 @@ from logging import getLogger
 import httpx
 import MeCab
 import numpy
-from agents import Agent, Runner, function_tool
+from agents import Agent, ModelSettings, Runner, function_tool
 from bs4 import BeautifulSoup
 from googlesearch import search
 from moviepy import (
@@ -47,7 +47,12 @@ async def google_search(query: str) -> list[str]:
 
 agent = Agent(
     name="2ch-short-maker",
-    model="gpt-4.1-mini",
+    model="gpt-5-mini",
+    model_settings=ModelSettings(
+        reasoning={
+            "effort": "low",
+        }
+    ),
     instructions="""
     **指示**
     登場人物は「A」と「B」。以下の形式で回答する。
@@ -68,7 +73,8 @@ agent = Agent(
 
     **キーワード**
     - タイトルに沿った画像を検索するためのキーワードを入力してください。
-    - 関連するキーワードでもよい。
+    - いらすとやで画像を検索するためのキーワードとして適切なものにしてください。
+    - キーワードは一語でお願いします。
 
     **ツール**
     - 検索結果は3件までです。

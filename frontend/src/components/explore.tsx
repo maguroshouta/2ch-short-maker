@@ -2,6 +2,7 @@
 
 import ThumbnailCard from "@/components/thumbnail-card";
 import { Button } from "@/components/ui/button";
+import { publicApiUrl } from "@/lib/api-url";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -13,9 +14,7 @@ export default function Explore(props: { videos: Videos }) {
 
 	async function viewMore() {
 		setLoading(true);
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/?offset=${videos.length}`,
-		);
+		const res = await fetch(publicApiUrl(`/api/videos/?offset=${videos.length}`));
 		const newVideos: Videos = await res.json();
 		setIsNext(newVideos.is_next);
 		setVideos([...videos, ...newVideos.generated]);

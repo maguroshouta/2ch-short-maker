@@ -3,6 +3,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { publicApiUrl } from "@/lib/api-url";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -23,19 +24,16 @@ export default function GeneratePage() {
 			description: "しばらくお待ちください。",
 		});
 		try {
-			const res = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/api/videos/generate`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						prompt: formData.get("prompt"),
-						token: formData.get("cf-turnstile-response"),
-					}),
+			const res = await fetch(publicApiUrl("/api/videos/generate"), {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify({
+					prompt: formData.get("prompt"),
+					token: formData.get("cf-turnstile-response"),
+				}),
+			});
 
 			if (res.status === 429) {
 				toast({

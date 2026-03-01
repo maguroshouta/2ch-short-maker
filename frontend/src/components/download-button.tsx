@@ -1,12 +1,11 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { publicApiUrl } from "@/lib/api-url";
 
 export default function DownloadButton({ video }: { video: Video }) {
 	async function download() {
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.id}.mp4`,
-		);
+		const res = await fetch(publicApiUrl(`/api/videos/${video.id}.mp4`));
 		const blob = await res.blob();
 		const url = window.URL.createObjectURL(blob);
 		const a = document.createElement("a");

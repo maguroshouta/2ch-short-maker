@@ -1,6 +1,7 @@
 import DownloadButton from "@/components/download-button";
 import ShareButton from "@/components/share-button";
 import VideoSwiper from "@/components/thumbnail-swiper";
+import { publicApiUrl, serverApiUrl } from "@/lib/api-url";
 import type { Metadata } from "next";
 
 export default async function Page({
@@ -10,21 +11,15 @@ export default async function Page({
 }) {
 	const id = (await params).id;
 
-	const video_res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${id}`,
-		{
-			cache: "no-cache",
-		},
-	);
+	const video_res = await fetch(serverApiUrl(`/api/videos/${id}`), {
+		cache: "no-cache",
+	});
 
 	const video: Video = await video_res.json();
 
-	const recent_res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos`,
-		{
-			cache: "no-cache",
-		},
-	);
+	const recent_res = await fetch(serverApiUrl("/api/videos"), {
+		cache: "no-cache",
+	});
 
 	const videos: Videos = await recent_res.json();
 
@@ -49,9 +44,7 @@ export default async function Page({
 				<p>プロンプト</p>
 				<h1 className="mb-2 font-bold text-lg">{video.prompt}</h1>
 				<video className="w-72 rounded-lg md:w-96" controls loop>
-					<source
-						src={`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${video.id}.mp4`}
-					/>
+					<source src={publicApiUrl(`/api/videos/${video.id}.mp4`)} />
 				</video>
 				<div className="flex gap-4 mt-2">
 					<DownloadButton video={video} />
@@ -70,10 +63,7 @@ export async function generateMetadata({
 	params,
 }: { params: Promise<{ id: string }> }): Promise<Metadata> {
 	const id = (await params).id;
-	const res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/videos/${id}`,
-		{ cache: "no-cache" },
-	);
+	const res = await fetch(serverApiUrl(`/api/videos/${id}`), { cache: "no-cache" });
 	if (!res.ok) {
 		return {
 			title: "動画が見つかりません | 2chショートメーカー",

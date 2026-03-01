@@ -1,39 +1,64 @@
 services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-}"
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+    environment:
+      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-}"
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:3000}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   backend:
     container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
-      - MINIO_ACCESS_KEY=minio_access_key
-      - MINIO_SECRET_KEY=minio_secret_key
-      - MINIO_API_URL=minio:9000
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - TURNSTILE_SITE_SECRET_KEY=${TURNSTILE_SITE_SECRET_KEY}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio_access_key}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio_secret_key}
+      MINIO_API_URL: minio:9000
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      TURNSTILE_SITE_SECRET_KEY: ${TURNSTILE_SITE_SECRET_KEY:-1x0000000000000000000000000000000AA}
+    ports:
+      - "${BACKEND_PORT:-8000}:3000"
     depends_on:
       - postgres
       - minio
+    restart: unless-stopped
+
   postgres:
     container_name: postgres
     image: postgres:16
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:
-      - ai-short-maker-postgres-data:/var/lib/postgresql/data
+      - 2ch-short-maker-postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   minio:
     container_name: minio
     image: minio/minio
     environment:
-      MINIO_ACCESS_KEY: minio_access_key
-      MINIO_SECRET_KEY: minio_secret_key
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minio_access_key}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minio_secret_key}
     command: server --address ":9000" /data
     volumes:
-      - ai-short-maker-minio-data:/data
+      - 2ch-short-maker-minio-data:/data
+    restart: unless-stopped
 
 volumes:
-  ai-short-maker-minio-data:
-  ai-short-maker-postgres-data:
+  2ch-short-maker-minio-data:
+  2ch-short-maker-postgres-data:

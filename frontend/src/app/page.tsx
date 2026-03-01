@@ -1,10 +1,11 @@
 import GenerateForm from "@/components/generate-form";
 import VideoSwiper from "@/components/thumbnail-swiper";
 import { Button } from "@/components/ui/button";
+import { serverApiUrl } from "@/lib/api-url";
 import Link from "next/link";
 
 export default async function Home() {
-	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/videos`, {
+	const res = await fetch(serverApiUrl("/api/videos"), {
 		cache: "no-store",
 	});
 	const videos: Videos = await res.json();

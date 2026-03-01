@@ -1,20 +1,4 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - ./frontend/.env
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/.env
   postgres:
     image: postgres:16
     environment:
@@ -23,6 +7,8 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - 2ch-short-maker-postgres-data:/var/lib/postgresql/data
   minio:
     image: minio/minio
     environment:
@@ -31,3 +17,9 @@ services:
     ports:
       - "9000:9000"
     command: server --address ":9000" /data
+    volumes:
+      - 2ch-short-maker-minio-data:/data
+
+volumes:
+  2ch-short-maker-postgres-data:
+  2ch-short-maker-minio-data:

@@ -27,10 +27,10 @@ uv sync
 
 postgresとminioの立ち上げ
 ```
-docker compose up -d
+docker compose -f ../compose.yaml up -d
 ```
 
 fastapiの立ち上げ
 ```
-uv run fastapi run dev
+uv run fastapi run app/main.py --port 8000
 ```

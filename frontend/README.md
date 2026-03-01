@@ -7,6 +7,12 @@ NodeJS 22 + NextJS
 立ち上げに必要なもの
 
 - [pnpm](https://pnpm.io/)
+- [docker](https://www.docker.com/)
+
+依存サービス(Postgres/MinIO)の立ち上げ
+```
+docker compose -f ../compose.yaml up -d
+```
 
 .envの作成
 ```
